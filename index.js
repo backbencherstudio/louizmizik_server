@@ -7,5 +7,5 @@ const PORT = config.app.port
 app.listen(PORT, async ()=>{
     console.log(`http://localhost:${PORT}`);
     await db_connection()
-    await connectRedis()
+    //await connectRedis()
 })

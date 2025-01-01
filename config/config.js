@@ -3,7 +3,7 @@ require('dotenv').config()
 const dev = {
     db:{
         url: process.env.MONGO_URI,
-        radisUrl: `redis://${process.env.REDIS_HOST}:${process.env.REDIS_PORT}` //`redis://redis:6379` // `redis://${process.env.REDIS_HOST}:${process.env.REDIS_PORT}` //redis://[hostname]:[port] //redis://localhost:6379
+        //radisUrl: `redis://${process.env.REDIS_HOST}:${process.env.REDIS_PORT}` //`redis://redis:6379` // `redis://${process.env.REDIS_HOST}:${process.env.REDIS_PORT}` //redis://[hostname]:[port] //redis://localhost:6379
 
     },
     app:{
