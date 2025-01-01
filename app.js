@@ -5,6 +5,7 @@ const session = require("express-session");
 const cookieParser = require("cookie-parser");
 const route = require("./modules/users/users.routes");
 const beatRoute = require("./modules/beat/beat.route");
+const stripeRoute = require("./modules/payment/stripe.routes");
 
 const app = express();
 
@@ -30,6 +31,7 @@ app.use(
 
 app.use("api/users", route);
 app.use("/api/beat", beatRoute)
+app.use("/api/payments", stripeRoute)
 
 app.use((req, res, next) => {
   res.status.json({
