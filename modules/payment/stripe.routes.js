@@ -56,6 +56,42 @@ router.post("/create-subscription", async (req, res) => {
 });
 
 
+router.get('/get-price', async (req, res) => {
+  try {
+    // Replace with your actual priceId from Stripe
+    const priceId = 'price_1QcO7yLEvlBZD5dJQFVPekKR';
+    return res.status(200).json({ priceId });
+  } catch (err) {
+    console.error("Error fetching price:", err);
+    return res.status(500).json({ error: "Failed to fetch price" });
+  }
+});
+
+// Create PaymentIntent for client-side confirmation
+router.post('/create-payment-intent', async (req, res) => {
+  const { priceId } = req.body;
+
+  try {
+    // You can create a PaymentIntent using the priceId for the product or plan
+    const paymentIntent = await stripe.paymentIntents.create({
+      amount: 1000, // The price in cents, adjust based on your price
+      currency: 'usd', // You can change this currency based on your requirement
+      description: 'Premium Subscription',  // A description for the payment
+      payment_method_types: ['card'], // Allowing card payments
+    });
+
+    res.status(200).json({ clientSecret: paymentIntent.client_secret });
+  } catch (err) {
+    console.error("Error creating payment intent:", err);
+    res.status(500).json({ error: "Failed to create payment intent" });
+  }
+});
+
+
+
+
+
+
 router.post('/webhook', express.raw({ type: 'application/json' }), (req, res) => {
     const sig = req.headers['stripe-signature'];
   
