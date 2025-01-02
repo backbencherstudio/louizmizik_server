@@ -259,14 +259,24 @@ const authenticateUser = async (req, res) => {
 const editUserProfile = async (req, res) => {
   try {
     console.log(req.body);
-    if (!req.userId) {
-      res.status(400).json({ message: "Unauthorized user" });
+    const imageUrl = `${req.file.filename}`; 
+    if(imageUrl){
+      req.body.avatar = imageUrl;
     }
-    if (req.body.password) {
+    if (!req.params.userId) {
+     return  res.status(400).json({ message: "Unauthorized user" });
+    }
+    if (req.body.newpassword) {
+      if (req.body.newpassword === req.body.confirmPassword) {
+        res.status(400).json({ message: "Password not matched" });
+        return;
+      }
       req.body.password = await hashPassword(req.body.password);
     }
 
-    const updatedUser = await User.findByIdAndUpdate(req.userId, req.body, {
+    
+
+    const updatedUser = await User.findByIdAndUpdate(req.params.userId, req.body, {
       new: true,
     });
 
@@ -274,9 +284,11 @@ const editUserProfile = async (req, res) => {
       res.status(404).json({ message: "User not found" });
       return;
     }
-    res.status(200).json(updatedUser);
+    return res.status(200).json(updatedUser);
   } catch (error) {
-    res.status(500).json({ message: "Internal server error", error });
+    console.log("lalalalaala");
+    console.log(error);
+    return res.status(500).json({ message: "Internal server error", error });
   }
 };
 
