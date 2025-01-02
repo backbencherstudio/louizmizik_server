@@ -4,7 +4,11 @@ const { Schema } = mongoose;
 const UserSchema = new Schema(
   {
     name: { type: String, required: [true, "name is required"] },
-    email: { type: String, required: [true, "email is required and unique"], unique: true },
+    email: {
+      type: String,
+      required: [true, "email is required and unique"],
+      unique: true,
+    },
     password: { type: String, required: true },
     fullName: { type: String },
     producerName: { type: String },
@@ -17,6 +21,8 @@ const UserSchema = new Schema(
     youtubeChannel: { type: String },
     newpassword: { type: String },
     confirmPassword: { type: String },
+    credit: { type: Number, default: 0 },
+    customerId: { type: String },
   },
   { timestamps: true }
 );

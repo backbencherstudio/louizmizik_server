@@ -1,4 +1,4 @@
-const mongoose = require('mongoose');
+const mongoose = require("mongoose");
 
 const SubscriptionSchema = new mongoose.Schema({
   customerId: { type: String, required: true },
@@ -6,4 +6,4 @@ const SubscriptionSchema = new mongoose.Schema({
   status: { type: String, required: true },
 });
 
-module.exports = mongoose.model('Subscription', SubscriptionSchema);
+module.exports = mongoose.model("Subscription", SubscriptionSchema);

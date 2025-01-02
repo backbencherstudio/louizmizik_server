@@ -6,6 +6,7 @@ const cookieParser = require("cookie-parser");
 const route = require("./modules/users/users.routes");
 const beatRoute = require("./modules/beat/beat.route");
 const stripeRoute = require("./modules/payment/stripe.routes");
+const UserDashboard = require("./modules/userDashboard/userDashboard.route");
 
 const app = express();
 
@@ -32,6 +33,7 @@ app.use(
 app.use("api/users", route);
 app.use("/api/beat", beatRoute)
 app.use("/api/payments", stripeRoute)
+app.use("/api/dashboard", UserDashboard)
 
 app.use((req, res, next) => {
   res.status.json({
