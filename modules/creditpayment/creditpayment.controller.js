@@ -20,8 +20,8 @@ exports.extraCredit = async (req, res) => {
       mode: "payment",
       success_url:
       
-        "https://80da-103-161-9-102.ngrok-free.app/success?session_id={CHECKOUT_SESSION_ID}",
-      cancel_url: "https://80da-103-161-9-102.ngrok-free.app",
+        "https://cfae-103-161-9-102.ngrok-free.app/success?session_id={CHECKOUT_SESSION_ID}",
+      cancel_url: "https://cfae-103-161-9-102.ngrok-free.app",
     });
 
     res.json({ url: session.url });

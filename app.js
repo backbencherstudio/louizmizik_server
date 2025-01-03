@@ -36,6 +36,7 @@ app.use(
   })
 );
 
+
 app.use("api/users", route);
 app.use("/api/beat", beatRoute)
 app.use("/api/payments", stripeRoute)
@@ -70,20 +71,24 @@ app.get('/success',async (req, res) => {
 
   
   // Use body-parser to capture raw body for Stripe signature verification
-app.use(bodyParser.raw({ type: 'application/json' }));
+
+
+
+
+  // Use raw body for Stripe webhook signature verification
+app.use(
+  '/webhook',
+  bodyParser.raw({ type: 'application/json' })
+);
 
 app.post('/webhook', (req, res) => {
   const sig = req.headers['stripe-signature'];
-  const endpointSecret = 'we_1Qd4PALEvlBZD5dJGPHY4wUu';
-
-  // Get the raw body (before it's parsed)
-  const payload = req.body;
-
+  const endpointSecret = 'we_1Qd7uHLEvlBZD5dJMXIkuetm';
   let event;
 
   try {
     // Verify the webhook signature
-    event = stripe.webhooks.constructEvent(payload, sig, endpointSecret);
+    event = stripe.webhooks.constructEvent(req.body, sig, endpointSecret);
   } catch (err) {
     console.error(`Webhook signature verification failed: ${err.message}`);
     return res.status(400).send(`Webhook Error: ${err.message}`);
@@ -95,13 +100,15 @@ app.post('/webhook', (req, res) => {
       const paymentIntent = event.data.object;
       console.log('PaymentIntent was successful!');
       break;
-    // Other event types here...
+    // Add more event types as needed
     default:
       console.log(`Unhandled event type: ${event.type}`);
   }
 
+  // Return a response to acknowledge receipt of the event
   res.json({ received: true });
 });
+
 
 app.listen(3000, () => {
   console.log('Server running on port 3000');
