@@ -5,7 +5,7 @@ const router = express.Router();
 const { extraCredit, getSuccess } = require('./creditpayment.controller');
 const User = require("../users/users.models");
 
-router.post('/purchase-credits/:userID', extraCredit);
+router.post('/purchase-credits/:userId', extraCredit);
 // router.post('/webhook', express.raw({ type: 'application/json' }), async (req, res) => {
 //     const endpointSecret = 'sk_test_51QFpATLEvlBZD5dJjsneUWfIN2W2ok3yfxHN7qyLB2TRPYn0bs0UCzWytfZgZwrpcboY5GXMyen4BwCPthGLCrRX001T5gDgLK';
   
