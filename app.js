@@ -1,4 +1,5 @@
 const express = require("express");
+require("dotenv").config();
 const morgan = require("morgan");
 const cors = require("cors");
 const bodyParser = require('body-parser');
@@ -22,9 +23,7 @@ app.use(cors({
 }));
 
 app.use(express.urlencoded({ extended: true }));
-app.use(express.json());
 app.use(morgan("dev"));
-
 app.use(cookieParser());
 
 app.use(
@@ -36,14 +35,22 @@ app.use(
   })
 );
 
+// Middleware to conditionally use express.json()
+app.use((req, res, next) => {
+  if (req.path === '/webhook') {
+    next(); // Skip express.json() for the /webhook route
+  } else {
+    express.json()(req, res, next); // Use express.json() for other routes
+  }
+});
 
-app.use("api/users", route);
-app.use("/api/beat", beatRoute)
-app.use("/api/payments", stripeRoute)
-app.use("/api/credit", ExtraCredit)
-app.use("/api/dashboard", UserDashboard)
+app.use("/api/users", route);
+app.use("/api/beat", beatRoute);
+app.use("/api/payments", stripeRoute);
+app.use("/api/credit", ExtraCredit);
+app.use("/api/dashboard", UserDashboard);
 
-app.get('/success',async (req, res) => {
+app.get('/success', async (req, res) => {
   const sessionId = req.query.session_id;
 
   try {
@@ -58,63 +65,81 @@ app.get('/success',async (req, res) => {
       return res.status(404).send({ message: 'Session not found' });
     }
 
-    // Handle the success logic (e.g., updating user data)
-    console.log('Session details:', session);
-
     res.status(200).send({ message: 'Payment successful', session });
   } catch (error) {
     console.error('Error retrieving session:', error.message);
     res.status(500).send({ message: `500! Something broken: ${error.message}` });
   }
-} )
-
-
-  
-  // Use body-parser to capture raw body for Stripe signature verification
+});
 
 
 
+// app.post(
+//   '/webhook',
+//   express.raw({ type: 'application/json' }),
+//   (req, res) => {
+//     const sig = req.headers['stripe-signature'];
+//     let event;
 
-  // Use raw body for Stripe webhook signature verification
-app.use(
-  '/webhook',
-  bodyParser.raw({ type: 'application/json' })
-);
+//     try {
+//       event = stripe.webhooks.constructEvent(req.body, sig, endpointSecret);
+//     } catch (err) {
+//       console.error(`Webhook signature verification failed: ${err.message}`);
+//       return res.status(400).send(`Webhook Error: ${err.message}`);
+//     }
 
-app.post('/webhook', (req, res) => {
-  const sig = req.headers['stripe-signature'];
-  const endpointSecret = 'we_1Qd7uHLEvlBZD5dJMXIkuetm';
+//     switch (event.type) {
+//       case 'payment_intent.succeeded':
+//         const paymentIntent = event.data.object;
+//         console.log('PaymentIntent was successful!');
+//         break;
+//       default:
+//         console.log(`Unhandled event type: ${event.type}`);
+//     }
+
+//     res.json({ received: true });
+//   }
+// );
+app.post('/webhook', express.raw({ type: 'application/json' }), async (req, res) => {
+  const endpointSecret = "whsec_vv9rWBsQbtE13jyTvpziJdKRHQGrZz1O";
+
   let event;
 
   try {
-    // Verify the webhook signature
-    event = stripe.webhooks.constructEvent(req.body, sig, endpointSecret);
+    event = stripe.webhooks.constructEvent(
+      req.body,
+      req.headers['stripe-signature'],
+      endpointSecret
+    );
   } catch (err) {
-    console.error(`Webhook signature verification failed: ${err.message}`);
-    return res.status(400).send(`Webhook Error: ${err.message}`);
+    console.error('Webhook signature verification failed:', err.message);
+    return res.sendStatus(400);
   }
 
-  // Handle the event
-  switch (event.type) {
-    case 'payment_intent.succeeded':
-      const paymentIntent = event.data.object;
-      console.log('PaymentIntent was successful!');
-      break;
-    // Add more event types as needed
-    default:
-      console.log(`Unhandled event type: ${event.type}`);
+  // Handle successful payment
+  console.log('Event type:', event.type);
+  if (event.type === 'checkout.session.completed') {
+    console.log('Checkout session completed!');
+    const session = event.data.object;
+
+    // Find user and update credits
+    const userId = session.metadata.userId; // Pass metadata in checkout session
+    const user = await User.findById(userId);
+    console.log('User:', user);
+
+    if (user) {
+      user.credit += 10; // Add 10 credits
+      await user.save();
+    }
   }
 
-  // Return a response to acknowledge receipt of the event
-  res.json({ received: true });
+  res.status(200).send();
 });
 
 
 app.listen(3000, () => {
   console.log('Server running on port 3000');
 });
-  
- 
 
 app.use((err, req, res, next) => {
   res.status(500).json({
@@ -123,5 +148,3 @@ app.use((err, req, res, next) => {
 });
 
 module.exports = app;
-
-//hello
