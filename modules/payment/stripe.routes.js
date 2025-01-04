@@ -17,9 +17,9 @@ const io = require('socket.io')(httpServer, {
   }
 });
 
-router.post("/create-customer", createCustomer);
+router.post("/create-customer/:userId", createCustomer);
 
-router.post("/create-subscription", createSubscription);
+router.post("/create-subscription/:userId", createSubscription);
 
 
 router.get('/get-price', getPrice);
@@ -71,7 +71,7 @@ router.post('/webhook', express.raw({ type: 'application/json' }), (req, res) =>
   try {
     // Verify the Stripe webhook signature
     event = stripe.webhooks.constructEvent(req.body, sig, endpointSecret);
-
+    console.log('Event data:', JSON.stringify(event.data, null, 2));
     // Handle the subscription updated event
     if (event.type === 'customer.subscription.updated') {
       const subscription = event.data.object;

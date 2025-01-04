@@ -1,6 +1,5 @@
-const stripe = require("stripe")(
-  "sk_test_51QFpATLEvlBZD5dJjsneUWfIN2W2ok3yfxHN7qyLB2TRPYn0bs0UCzWytfZgZwrpcboY5GXMyen4BwCPthGLCrRX001T5gDgLK"
-);
+require("dotenv").config();
+const stripe = require("stripe")(process.env.STRIPE_SECRET_KEY);
 const User = require("../users/users.models");
 
 exports.extraCredit = async (req, res) => {
