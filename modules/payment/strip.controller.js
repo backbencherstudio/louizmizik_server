@@ -1,7 +1,5 @@
-// Load environment variables
 require("dotenv").config();
 
-// Import Stripe SDK
 const stripe = require("stripe")(process.env.STRIPE_SECRET_KEY);
 const express = require("express");
 const router = express.Router();
@@ -10,14 +8,16 @@ const User = require("../users/users.models");
 
 exports.createCustomer = async (req, res) => {
   const { email, paymentMethodId } = req.body;
-  const { userId } = req.params
+  const { userId } = req.params;
   const user = await User.findById(userId);
   console.log(user);
   if (!user) {
     return res.status(400).json({ message: "User not found" });
   }
   if (user && user.customerId !== undefined) {
-    console.log('User already has a customer ID:', user.customerId);
+    console.log("User already has a customer ID:", user.customerId);
+    // const subscriver = await Subscription.findOne({ customerId: user.customerId });
+    // console.log(subscriver, "5000000000000000000000");
     return res.status(200).json({ customerId: user.customerId });
   } else {
     try {
@@ -37,18 +37,31 @@ exports.createCustomer = async (req, res) => {
   }
 };
 
+
+
+
+
+
+
 exports.createSubscription = async (req, res) => {
   const { customerId, priceId } = req.body;
-  console.log(customerId, priceId);
-  // const user = User.findOne(req.userId);
+  //console.log(customerId, priceId);
+
+  const subscriver = await Subscription.findOne({ customerId: customerId });
+  if (subscriver) {
+    if (DATE.now() <= subscriver.endDate) {
+      return res
+        .status(400)
+        .json({ message: "Your Preveous Subscription time not finished!!!!!" });
+    }
+  }
 
   try {
     // Create the subscription
     const subscription = await stripe.subscriptions.create({
-      customer: customerId, 
+      customer: customerId,
       items: [{ price: priceId }],
       expand: ["latest_invoice.payment_intent"],
-     
     });
 
     // Save subscription details in MongoDB
@@ -56,10 +69,12 @@ exports.createSubscription = async (req, res) => {
       customerId,
       subscriptionId: subscription.id,
       status: subscription.status,
+      startDate: new Date(), // Current date and time
+      endDate: new Date(new Date().setDate(new Date().getDate() + 30)), // Adds 30 days to the current date
     });
 
     await newSubscription.save();
-    const { userId } = req.params
+    const { userId } = req.params;
     const user = await User.findById(userId);
     console.log(user);
     if (user) {
@@ -70,21 +85,29 @@ exports.createSubscription = async (req, res) => {
     return res.status(200).json({ subscriptionId: subscription.id });
   } catch (err) {
     //throw err;
-     console.error('Error creating subscription:', err.message);
+    console.error("Error creating subscription:", err.message);
     return res.status(500).json({ error: "Failed to create subscription" });
   }
 };
 
+
+
+
+
 exports.getPrice = async (req, res) => {
   try {
     // Replace with your actual priceId from Stripe
-    const priceId = "price_1QcO7yLEvlBZD5dJQFVPekKR";
+    const priceId = process.env.STRIPE_SUBSCRIPTION_KEY;
     return res.status(200).json({ priceId });
   } catch (err) {
     console.error("Error fetching price:", err);
     return res.status(500).json({ error: "Failed to fetch price" });
   }
 };
+
+
+
+
 
 exports.createPaymentInted = async (req, res) => {
   const { priceId } = req.body;
@@ -104,6 +127,10 @@ exports.createPaymentInted = async (req, res) => {
     return res.status(500).json({ error: "Failed to create payment intent" });
   }
 };
+
+
+
+
 
 exports.getPlan = async (req, res) => {
   try {
