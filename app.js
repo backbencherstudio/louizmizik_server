@@ -11,6 +11,7 @@ const stripeRoute = require("./modules/payment/stripe.routes");
 const UserDashboard = require("./modules/userDashboard/userDashboard.route");
 const User = require("./modules/users/users.models");
 ExtraCredit = require("./modules/creditpayment/creditpayment.route");
+const nodemailer = require('nodemailer');
 const stripe = require("stripe")(
   "sk_test_51QFpATLEvlBZD5dJjsneUWfIN2W2ok3yfxHN7qyLB2TRPYn0bs0UCzWytfZgZwrpcboY5GXMyen4BwCPthGLCrRX001T5gDgLK"
 );
@@ -35,12 +36,13 @@ app.use(
   })
 );
 
-// Middleware to conditionally use express.json()
+
 app.use((req, res, next) => {
-  if (req.path === '/webhook') {
-    next(); // Skip express.json() for the /webhook route
+  //  || req.path === '/api/payments/webhook'
+  if (req.path === '/webhook'  ) {
+    next(); 
   } else {
-    express.json()(req, res, next); // Use express.json() for other routes
+    express.json()(req, res, next); 
   }
 });
 
@@ -74,32 +76,7 @@ app.get('/success', async (req, res) => {
 
 
 
-// app.post(
-//   '/webhook',
-//   express.raw({ type: 'application/json' }),
-//   (req, res) => {
-//     const sig = req.headers['stripe-signature'];
-//     let event;
-
-//     try {
-//       event = stripe.webhooks.constructEvent(req.body, sig, endpointSecret);
-//     } catch (err) {
-//       console.error(`Webhook signature verification failed: ${err.message}`);
-//       return res.status(400).send(`Webhook Error: ${err.message}`);
-//     }
-
-//     switch (event.type) {
-//       case 'payment_intent.succeeded':
-//         const paymentIntent = event.data.object;
-//         console.log('PaymentIntent was successful!');
-//         break;
-//       default:
-//         console.log(`Unhandled event type: ${event.type}`);
-//     }
-
-//     res.json({ received: true });
-//   }
-// );
+;
 app.post('/webhook', express.raw({ type: 'application/json' }), async (req, res) => {
   const endpointSecret = "whsec_vv9rWBsQbtE13jyTvpziJdKRHQGrZz1O";
 
@@ -117,19 +94,46 @@ app.post('/webhook', express.raw({ type: 'application/json' }), async (req, res)
   }
 
   // Handle successful payment
-  console.log('Event type:', event.type);
+  //console.log('Event type:', event.type);
   if (event.type === 'checkout.session.completed') {
     console.log('Checkout session completed!');
     const session = event.data.object;
 
-    // Find user and update credits
-    const userId = session.metadata.userId; // Pass metadata in checkout session
+    
+    const userId = session.metadata.userId; 
     const user = await User.findById(userId);
     console.log('User:', user);
 
     if (user) {
-      user.credit += 10; // Add 10 credits
+      user.credit += 10; 
       await user.save();
+      const transporter = nodemailer.createTransport({
+        host: 'smtp.gmail.com', 
+        port: 587, 
+        secure: false, 
+        auth: {
+          user: process.env.node_mailer_user, 
+          pass: process.env.NODE_MAILER_PASSWORD 
+        }
+      });
+
+      const mailOptions = {
+        from: '"Your App Name" <your-smtp-email@example.com>',
+        to: user.email, // User's email
+        subject: 'Credits Added to Your Account',
+        text: `Hi ${user.name},\n\nYou have been awarded 10 additional credits! Your new credit balance is ${user.credit}.\n\nThank you for using our service!\n\nBest regards,\nYour App Team`,
+        html: `<p>Hi ${user.name},</p>
+               <p>You have been awarded <strong>10 additional credits</strong>! Your new credit balance is <strong>${user.credit}</strong>.</p>
+               <p>Thank you for using our service!</p>
+               <p>Best regards,<br>Your App Team</p>`
+      };
+
+      transporter.sendMail(mailOptions, (error, info) => {
+        if (error) {
+          console.error('Error sending email:', error);
+        } else {
+          console.log('Email sent:', info.response);
+        } });
     }
   }
 

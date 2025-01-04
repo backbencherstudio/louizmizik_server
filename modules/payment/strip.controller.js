@@ -10,11 +10,14 @@ const User = require("../users/users.models");
 
 exports.createCustomer = async (req, res) => {
   const { email, paymentMethodId } = req.body;
-  const user = User.findOne(req.userId);
+  const { userId } = req.params
+  const user = await User.findById(userId);
+  console.log(user);
   if (!user) {
     return res.status(400).json({ message: "User not found" });
   }
-  if (user && user.customerId !== null) {
+  if (user && user.customerId !== undefined) {
+    console.log('User already has a customer ID:', user.customerId);
     return res.status(200).json({ customerId: user.customerId });
   } else {
     try {
@@ -24,7 +27,8 @@ exports.createCustomer = async (req, res) => {
         payment_method: paymentMethodId,
         invoice_settings: { default_payment_method: paymentMethodId },
       });
-
+      user.customerId = customer.id;
+      await user.save();
       return res.status(200).json({ customerId: customer.id });
     } catch (err) {
       console.error("Error creating customer:", err.message);
@@ -35,15 +39,16 @@ exports.createCustomer = async (req, res) => {
 
 exports.createSubscription = async (req, res) => {
   const { customerId, priceId } = req.body;
-  //console.log(customerId, priceId);
-  const user = User.findOne(req.userId);
+  console.log(customerId, priceId);
+  // const user = User.findOne(req.userId);
 
   try {
     // Create the subscription
     const subscription = await stripe.subscriptions.create({
-      customer: customerId,
+      customer: customerId, 
       items: [{ price: priceId }],
       expand: ["latest_invoice.payment_intent"],
+     
     });
 
     // Save subscription details in MongoDB
@@ -54,7 +59,9 @@ exports.createSubscription = async (req, res) => {
     });
 
     await newSubscription.save();
-    const user = await User.findById(req.userId);
+    const { userId } = req.params
+    const user = await User.findById(userId);
+    console.log(user);
     if (user) {
       user.credit = (user.credit || 0) + 20;
       await user.save();
@@ -62,7 +69,8 @@ exports.createSubscription = async (req, res) => {
 
     return res.status(200).json({ subscriptionId: subscription.id });
   } catch (err) {
-    //   console.error('Error creating subscription:', err.message);
+    //throw err;
+     console.error('Error creating subscription:', err.message);
     return res.status(500).json({ error: "Failed to create subscription" });
   }
 };
