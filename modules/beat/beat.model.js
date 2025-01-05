@@ -49,6 +49,7 @@ const beatSchema = new mongoose.Schema(
     audioPath: {
       type: String,
     },
+    register:{type : Boolean, default : false},
     imagePath: {
       type: String,
     },

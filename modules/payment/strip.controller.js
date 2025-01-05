@@ -5,6 +5,8 @@ const express = require("express");
 const router = express.Router();
 const Subscription = require("./stripe.model");
 const User = require("../users/users.models");
+const Transection = require("../TotalCalculation/calculation.model");
+
 
 exports.createCustomer = async (req, res) => {
   const { email, paymentMethodId } = req.body;
@@ -47,9 +49,9 @@ exports.createSubscription = async (req, res) => {
   const { customerId, priceId } = req.body;
   //console.log(customerId, priceId);
 
-  const subscriver = await Subscription.findOne({ customerId: customerId });
-  if (subscriver) {
-    if (DATE.now() <= subscriver.endDate) {
+  const subscriber = await Subscription.findOne({ customerId: customerId });
+  if (subscriber) {
+    if (Date.now() <= new Date(subscriber.endDate).getTime()) {
       return res
         .status(400)
         .json({ message: "Your Preveous Subscription time not finished!!!!!" });
@@ -69,16 +71,24 @@ exports.createSubscription = async (req, res) => {
       customerId,
       subscriptionId: subscription.id,
       status: subscription.status,
-      startDate: new Date(), // Current date and time
+      startDate: new Date(), 
       endDate: new Date(new Date().setDate(new Date().getDate() + 30)), // Adds 30 days to the current date
     });
 
     await newSubscription.save();
     const { userId } = req.params;
     const user = await User.findById(userId);
+
     console.log(user);
     if (user) {
       user.credit = (user.credit || 0) + 20;
+
+      const newTransaction = new Transection({
+        credit: 20, // Amount of credit being added
+        userId: user._id,
+        customerId: customerId, // Replace with the actual customer ID
+      });
+      await newTransaction.save();
       await user.save();
     }
 
@@ -156,5 +166,43 @@ exports.getPlan = async (req, res) => {
   } catch (err) {
     console.error("Error fetching plans:", err);
     res.status(500).json({ error: "Failed to fetch plans" });
+  }
+};
+
+
+
+exports.cancelSubscription = async (req, res) => {
+  const userId = req.params.userId;
+
+  try {
+      // Find the user
+      const user = await User.findById(userId);
+      if (!user) {
+          return res.status(404).json({ message: 'User not found' });
+      }
+
+      // Find the subscription
+      const subscription = await Subscription.findOne({ customerId: user.customerId });
+      if (!subscription) {
+          return res.status(404).json({ message: 'Subscription not found' });
+      }
+
+      // Cancel the subscription in Stripe
+      const canceledSubscription = await stripe.subscriptions.cancel(subscription.subscriptionId);
+
+
+      // Update subscription status in MongoDB
+      subscription.status = 'canceled';
+      subscription.endDate = new Date();
+      await subscription.save();
+
+      // Respond with success
+      return res.status(200).json({
+          message: 'Subscription canceled successfully',
+          subscription: canceledSubscription,
+      });
+  } catch (error) {
+      console.error('Error canceling subscription:', error);
+      return res.status(500).json({ message: 'Failed to cancel subscription', error: error.message });
   }
 };

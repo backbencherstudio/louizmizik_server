@@ -8,7 +8,7 @@ const router = express.Router();
 const Subscription = require("./stripe.model"); // Assuming you have a subscription model
 const socketIo = require('socket.io');
 const app = require("../../app");
-const { createCustomer, createSubscription, getPrice, createPaymentInted, getPlan } = require("./strip.controller");
+const { createCustomer, createSubscription, getPrice, createPaymentInted, getPlan, cancelSubscription } = require("./strip.controller");
 const httpServer = require('http').Server(app); // Wrap the app with an HTTP server
 const io = require('socket.io')(httpServer, {
   cors: {
@@ -29,6 +29,8 @@ router.post('/create-payment-intent', createPaymentInted);
 
 
 router.get('/get-plans', getPlan);
+
+router.delete("/cancelSubscription/:userId", cancelSubscription);
 
 
 
