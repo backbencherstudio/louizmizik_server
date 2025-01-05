@@ -226,6 +226,9 @@ const authenticateUser = async (req, res) => {
       res.status(400).json({ message: "User not found!" });
       return;
     }
+    if(user.blacklist){
+      res.status(400).json({message : "You are in blacklist!!"})
+    }
 
     const passwordMatch = await bcrypt.compare(password, user.password);
 
