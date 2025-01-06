@@ -118,7 +118,7 @@ app.post(
         const newTransaction = new Transection({
           credit: 10, 
           userId: user._id,
-          customerId: customerId, 
+          customerId: user.customerId, 
         });
         await newTransaction.save();
         await user.save();
