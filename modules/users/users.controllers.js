@@ -226,7 +226,7 @@ const authenticateUser = async (req, res) => {
       res.status(400).json({ message: "User not found!" });
       return;
     }
-    if(user.blacklist){
+    if(user.blacklist && new Date() > new Date(user.subscriptionEndDAte)){
       res.status(400).json({message : "You are in blacklist!!"})
     }
 

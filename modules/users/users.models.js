@@ -23,7 +23,8 @@ const UserSchema = new Schema(
     confirmPassword: { type: String },
     credit: { type: Number, default: 0 },
     customerId: { type: String },
-    blacklist : {type : Boolean, default: false}
+    blacklist : {type : Boolean, default: false},
+    subscriptionEndDAte: {type: Date, default: null}
   },
   { timestamps: true }
 );
