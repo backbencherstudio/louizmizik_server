@@ -2,6 +2,7 @@ const Beat = require("./beat.model");
 const User = require("../users/users.models")
 
 exports.createBeat = async (req, res) => {
+  console.log("hottt");
   const {userId} = req.params;
   const user = await User.findById(userId);
   if (!user) {

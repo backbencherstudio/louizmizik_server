@@ -11,7 +11,7 @@ router.post(
     { name: "audio", maxCount: 1 },
     { name: "image", maxCount: 1 },
   ]),
-  
+  verifyUser,
   createBeat
 );
 
