@@ -109,6 +109,14 @@ exports.createBeat = async (req, res) => {
         const registerDone = await certification(audioFile);
         if (registerDone) {
           register = true;
+          user.credit -= 1; 
+          await user.save();
+          
+          // here wil be add mail service for user---------------------------------------------------
+
+        }
+        else{
+          // here also failer msg email service add for user---------------------------------
         }
       } catch (certError) {
         console.error("Error during certification:", certError);
