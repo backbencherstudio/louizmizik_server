@@ -72,7 +72,7 @@ exports.createSubscription = async (req, res) => {
       subscriptionId: subscription.id,
       status: subscription.status,
       startDate: new Date(), 
-      endDate: new Date(new Date().setDate(new Date().getDate() + 30)), // Adds 30 days to the current date
+      endDate: new Date(new Date().setDate(new Date().getDate() + 30)), 
     });
 
     await newSubscription.save();
@@ -84,12 +84,42 @@ exports.createSubscription = async (req, res) => {
       user.credit = (user.credit || 0) + 20;
 
       const newTransaction = new Transection({
-        credit: 20, // Amount of credit being added
+        credit: 20, 
         userId: user._id,
-        customerId: customerId, // Replace with the actual customer ID
+        customerId: customerId, 
       });
+
       await newTransaction.save();
       await user.save();
+
+      const transporter = nodemailer.createTransport({
+        host: "smtp.gmail.com",
+        port: 587,
+        secure: false,
+        auth: {
+          user: process.env.node_mailer_user,
+          pass: process.env.NODE_MAILER_PASSWORD,
+        },
+      });
+    
+      const mailOptions = {
+        from: '"Luiz Music" <your_email@example.com>', // Sender address
+        to: user.email, // User's email address
+        subject: 'New Subscription Added',
+        text: `Hi ${user.name},\n\nA new subscription has been added to your account. Your current credit balance is now ${user.credit}.\n\nThank you for choosing our service!\n\nBest regards,\nYour Company Name`,
+        html: `<p>Hi ${user.name},</p>
+               <p>A new subscription has been added to your account. Your current credit balance is now <strong>${user.credit}</strong>.</p>
+               <p>Thank you for choosing our service!</p>
+               <p>Best regards,<br>Your Company Name</p>`,
+      };
+    
+      try {
+        await transporter.sendMail(mailOptions);
+        console.log('Email sent successfully!');
+      } catch (error) {
+        console.error('Error sending email:', error);
+      }
+
     }
 
     return res.status(200).json({ subscriptionId: subscription.id });

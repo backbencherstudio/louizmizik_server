@@ -1,13 +1,82 @@
 const Beat = require("./beat.model");
 const User = require("../users/users.models")
 
+// exports.createBeat = async (req, res) => {
+//   const {userId} = req.params;
+//   const user = await User.findById(userId);
+//   if (!user) {
+//     return res.status(404).json({ message: 'User not found' });
+// }
+//   try {
+//     const {
+//       beatName,
+//       bpm,
+//       collaborators,
+//       containsSamples,
+//       fullName,
+//       genre,
+//       isOnlyProducer,
+//       percentage,
+//       producerName,
+//       releaseDate,
+//       youtubeUrl,
+//     } = req.body;
+
+//     const audioFile = req.files.audio?.[0];
+//     const imageFile = req.files.image?.[0];
+//     let register = false
+//     console.log(audioFile, imageFile)
+//      if(user.credit>0){
+//     // beatRegister 3rd party api call here-------------------------------------------will be add ---------------------------------
+//       const registerDone = await certification(audio)
+//       if(registerDone){
+//         register = true;
+//       }
+//      }
+
+//     const newBeat = await Beat.create({
+//       beatName,
+//       bpm,
+//       collaborators,
+//       userId: req.userId,
+//       containsSamples: containsSamples === "yes",
+//       fullName,
+//       genre,
+//       isOnlyProducer: isOnlyProducer === "yes",
+//       percentage,
+//       producerName,
+//       releaseDate,
+//       youtubeUrl,
+//       register,
+//       audioPath: audioFile ? audioFile.path : null,
+//       imagePath: imageFile ? imageFile.path : null,
+//     });
+
+//     res
+//       .status(201)
+//       .json({ message: "Beat created successfully", beat: newBeat });
+//   } catch (error) {
+//     console.error('Full Error:', error);
+//     console.log(error)
+//     res.status(500).json({ message: "Error creating beat", error });
+//   }
+// };
+
 exports.createBeat = async (req, res) => {
-  const {userId} = req.params;
-  const user = await User.findById(userId);
-  if (!user) {
-    return res.status(404).json({ message: 'User not found' });
-}
+  const { userId } = req.params;
+  
   try {
+    // Find user
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    // Log incoming data for debugging
+    console.log("Request Body:", req.body);
+    console.log("Uploaded Files:", req.files);
+    
+    // Destructure fields from the request body
     const {
       beatName,
       bpm,
@@ -22,44 +91,60 @@ exports.createBeat = async (req, res) => {
       youtubeUrl,
     } = req.body;
 
-    const audioFile = req.files.audio?.[0];
-    const imageFile = req.files.image?.[0];
-    let register = false
+    // Get uploaded files
+    const audioFile = req.files?.audio?.[0];
+    const imageFile = req.files?.image?.[0];
 
-     if(user.credit>0){
-    // beatRegister 3rd party api call here-------------------------------------------will be add ---------------------------------
-      const registerDone = await certification(audio)
-      if(registerDone){
-        register = true;
+    // Check if files are missing
+    if (!audioFile || !imageFile) {
+      return res.status(400).json({ message: 'Audio or image file is missing' });
+    }
+
+    // Initialize register flag
+    let register = false;
+
+    // Check user credits and perform certification (if applicable)
+    if (user.credit > 0) {
+      try {
+        const registerDone = await certification(audioFile);
+        if (registerDone) {
+          register = true;
+        }
+      } catch (certError) {
+        console.error("Error during certification:", certError);
+        return res.status(500).json({ message: "Error during certification", error: certError.message });
       }
-     }
+    }
 
+    // Create new beat
     const newBeat = await Beat.create({
       beatName,
       bpm,
       collaborators,
-      userId: req.userId,
-      containsSamples: containsSamples === "yes",
+      userId,
+      containsSamples: containsSamples === "yes", // Convert string "yes" to boolean
       fullName,
       genre,
-      isOnlyProducer: isOnlyProducer === "yes",
+      isOnlyProducer: isOnlyProducer === "yes", // Convert string "yes" to boolean
       percentage,
       producerName,
       releaseDate,
       youtubeUrl,
       register,
-      audioPath: audioFile ? audioFile.path : null,
-      imagePath: imageFile ? imageFile.path : null,
+      audioPath: audioFile.path,
+      imagePath: imageFile.path,
     });
 
-    res
-      .status(201)
-      .json({ message: "Beat created successfully", beat: newBeat });
+    // Respond with the new beat
+    return res.status(201).json({ message: "Beat created successfully", beat: newBeat });
+  
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: "Error creating beat", error });
+    // Log full error details for debugging
+    console.error('Error creating beat:', error);
+    return res.status(500).json({ message: 'Error creating beat', error: error.message });
   }
 };
+
 
 exports.OneUsergetBeats = async (req, res) => {
   try {
