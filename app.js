@@ -17,6 +17,7 @@ const stripe = require("stripe")(
   "sk_test_51QFpATLEvlBZD5dJjsneUWfIN2W2ok3yfxHN7qyLB2TRPYn0bs0UCzWytfZgZwrpcboY5GXMyen4BwCPthGLCrRX001T5gDgLK"
 );
 const Transection = require("./modules/TotalCalculation/calculation.model")
+const path = require("path");
 
 const app = express();
 
@@ -30,6 +31,7 @@ app.use(
     credentials: true,
   })
 );
+app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
 app.use(express.urlencoded({ extended: true }));
 app.use(morgan("dev"));

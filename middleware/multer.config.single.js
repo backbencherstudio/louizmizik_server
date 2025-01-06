@@ -35,4 +35,4 @@ const upload = multer({
 });
 
 // Export upload.single for use in routes
-module.exports = upload.single('image');
+module.exports = upload.single('avatar');
