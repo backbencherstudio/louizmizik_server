@@ -2,6 +2,7 @@
 const User = require("../users/users.models")
 const Beat = require("../beat/beat.model")
 const Transection = require("../TotalCalculation/calculation.model")
+const Subscription = require("../payment/stripe.model")
 
 
 
@@ -63,3 +64,28 @@ exports.addUserBlacklist = async (req, res) => {
         return res.status(500).json({ message: 'Internal server error' });
     }
 };
+
+
+
+exports.allUserDetails = async (req,res) =>{
+  try {
+    
+    const users = await User.find({}, '-password -newpassword -confirmPassword');
+
+    const usersWithSubscriptions = await Promise.all(
+      users.map(async (user) => {
+        const subscription = await Subscription.findOne({ customerId: user.customerId });
+        return {
+          ...user._doc, // Spread user document
+          subscriptionStatus: subscription ? subscription.status : null,
+          subscriptionId: subscription ? subscription.subscriptionId : null,
+        };
+      })
+    );
+
+    res.status(200).json(usersWithSubscriptions);
+  } catch (error) {
+    console.error('Error fetching users with subscriptions:', error);
+    res.status(500).json({ message: 'Server Error' });
+  }
+}
