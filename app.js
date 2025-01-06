@@ -134,7 +134,7 @@ app.post(
         });
 
         const mailOptions = {
-          from: '"Your App Name" <your-smtp-email@example.com>',
+          from: '"LuiZ Music" <your-smtp-email@example.com>',
           to: user.email, // User's email
           subject: "Credits Added to Your Account",
           text: `Hi ${user.name},\n\nYou have been awarded 10 additional credits! Your new credit balance is ${user.credit}.\n\nThank you for using our service!\n\nBest regards,\nYour App Team`,
