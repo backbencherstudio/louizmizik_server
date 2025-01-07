@@ -1,5 +1,5 @@
 const express = require("express");
-const { adminDashboard, addUserBlacklist, allUserDetails } = require("./adminDashboard.controllar");
+const { adminDashboard, addUserBlacklist, allUserDetails, getUserRegistrationsByTimeframe } = require("./adminDashboard.controllar");
 
 
 const router = express.Router();
@@ -10,4 +10,5 @@ router.get("/adminDashboard", adminDashboard);
 router.delete("user-blacklist/:userId" , addUserBlacklist)
 
 router.get("/allUserDetails", allUserDetails)
+router.get("/user-registrations", getUserRegistrationsByTimeframe)
 module.exports = router;
