@@ -48,7 +48,7 @@ app.use(
 
 app.use((req, res, next) => {
   //  || req.path === '/api/payments/webhook'
-  if (req.path === "/webhook") {
+  if (req.path === "/webhook" || req.path === "/api/payments/webhook") {
     next();
   } else {
     express.json()(req, res, next);

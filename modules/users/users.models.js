@@ -22,7 +22,7 @@ const UserSchema = new Schema(
     newpassword: { type: String },
     confirmPassword: { type: String },
     credit: { type: Number, default: 0 },
-    customerId: { type: String },
+    customerId: { type: String ,default : null},
     blacklist : {type : Boolean, default: false},
     subscriptionEndDAte: {type: Date, default: null}
   },
