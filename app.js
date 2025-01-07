@@ -121,6 +121,8 @@ app.post(
           credit: 10, 
           userId: user._id,
           customerId: user.customerId, 
+          method: "extracredit",
+          amount : 5
         });
         await newTransaction.save();
         await user.save();
