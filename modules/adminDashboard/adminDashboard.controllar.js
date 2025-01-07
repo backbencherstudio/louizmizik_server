@@ -101,3 +101,63 @@ exports.allUserDetails = async (req,res) =>{
     res.status(500).json({ message: 'Server Error' });
   }
 }
+
+
+exports.getUserRegistrationsByTimeframe = async (req, res) => {
+  try {
+    const { timeframe } = req.query;
+    const { lastDay, lastWeek, lastMonth, startOfMonth, last90Days, startOfYear } = calculateDateRanges();
+
+    let startDate;
+
+    switch (timeframe) {
+      case "lastDay":
+        startDate = lastDay;
+        break;
+      case "lastWeek":
+        startDate = lastWeek;
+        break;
+      case "lastMonth":
+        startDate = lastMonth;
+        break;
+      case "monthToDate":
+        startDate = startOfMonth;
+        break;
+      case "last90Days":
+        startDate = last90Days;
+        break;
+      case "yearToDate":
+        startDate = startOfYear;
+        break;
+      default:
+        return res.status(400).json({ message: "Invalid timeframe specified." });
+    }
+
+    const users = await User.find({ createdAt: { $gte: startDate } });
+
+    res.status(200).json({
+      timeframe,
+      count: users.length,
+      users,
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Failed to fetch user registrations" });
+  }
+};
+
+
+
+// Utility function to calculate date ranges
+const calculateDateRanges = () => {
+  const now = new Date();
+
+  return {
+    lastDay: new Date(now.getFullYear(), now.getMonth(), now.getDate() - 1),
+    lastWeek: new Date(now.getFullYear(), now.getMonth(), now.getDate() - 7),
+    lastMonth: new Date(now.getFullYear(), now.getMonth() - 1, now.getDate()),
+    startOfMonth: new Date(now.getFullYear(), now.getMonth(), 1),
+    last90Days: new Date(now.getFullYear(), now.getMonth(), now.getDate() - 90),
+    startOfYear: new Date(now.getFullYear(), 0, 1),
+  };
+};
