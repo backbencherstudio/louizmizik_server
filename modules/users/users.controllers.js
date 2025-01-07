@@ -47,6 +47,7 @@ const getAllUsers = async (req, res) => {
 };
 
 const registerUser = async (req, res) => {
+  var country;
   try {
     let { name, email, password, role } = req.body;
 
@@ -99,6 +100,24 @@ const registerUser = async (req, res) => {
       res.status(400).json({ message: "Email already exists" });
       return;
     }
+    // ---------------------------------------------------
+    async function getLocationByIP() {
+      try {
+          const response = await fetch('http://get.geojs.io/v1/ip/geo.json');
+          const data = await response.json();
+  
+          console.log(`Country: ${data.country}`);
+          country = data.country;
+        
+          
+      } catch (error) {
+          console.error('Error fetching IP-based location:', error.message);
+      }
+  }
+  
+  getLocationByIP();
+  
+  // -----------------------------------------------------------------------------------------
 
     // Create a new user
     const newUser = new User({
@@ -106,6 +125,7 @@ const registerUser = async (req, res) => {
       email,
       password: hashedPassword,
       role,
+      country
     });
 
     await newUser.save();
@@ -213,6 +233,7 @@ const authenticateUser = async (req, res) => {
   try {
     const { email, password } = req.body;
     console.log(email, password);
+    var country;
 
     if (!email || !password) {
       res.status(400).json({ message: "Please fill all required fields" });
@@ -235,7 +256,7 @@ const authenticateUser = async (req, res) => {
       res.status(400).json({ message: "Invalid email or password" });
       return;
     }
-
+   
     const token = sign(
       { userEmail: user.email, userId: user._id },
       process.env.WEBTOKEN_SECRET_KEY,
@@ -433,13 +454,12 @@ const userAlltotalCredit = async (req, res) => {
   const { userId } = req.params;
 
   try {
-    // Check if user exists
+   
     const user = await User.findById(userId);
     if (!user) {
       return res.status(400).json({ message: "User not found" });
     }
 
-    // Aggregate to calculate total credit and count extra credit packages
     const result = await Transection.aggregate([
       { $match: { userId: mongoose.Types.ObjectId(userId) } }, 
       {
@@ -447,7 +467,7 @@ const userAlltotalCredit = async (req, res) => {
           _id: "$userId",
           totalCredit: { $sum: "$credit" }, 
           extraCreditCount: {
-            $sum: { $cond: [{ $eq: ["$method", "extracredit"] }, 1, 0] }, // Count extra credit packages
+            $sum: { $cond: [{ $eq: ["$method", "extracredit"] }, 1, 0] }, 
           },
         },
       },

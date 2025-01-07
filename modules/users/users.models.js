@@ -23,6 +23,7 @@ const UserSchema = new Schema(
     confirmPassword: { type: String },
     credit: { type: Number, default: 0 },
     customerId: { type: String ,default : null},
+    country: {type : String},
     blacklist : {type : Boolean, default: false},
     subscriptionEndDAte: {type: Date, default: null}
   },

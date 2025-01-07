@@ -30,11 +30,31 @@ exports.adminDashboard = async (req, res) =>{
             },
           ]);
           const totalRevenue = revenueResult.length > 0 ? revenueResult[0].totalRevenue : 0;
+
+
+
+          const transection = await Transection.aggregate([
+            {
+              $match: { method: "extracredit" },
+            },
+            {
+              $group: {
+                _id: null, 
+                totalExtraCredit: { $sum: "$credit" }, 
+              },
+            },
+          ]);
+      
+         
+          const totalExtraCredit = transection[0]?.totalExtraCredit || 0;
+
+
           const data  = {
             totalUsers,
             totalRegisteredBeats,
             totalCredit,
-            totalRevenue
+            totalRevenue,
+            totalExtraCredit
           }
       
           res.status(200).json({
