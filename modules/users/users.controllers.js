@@ -5,6 +5,8 @@ const nodemailer = require("nodemailer");
 const { sign, verify } = require("jsonwebtoken");
 
 const User = require("./users.models");
+const Transection = require("../TotalCalculation/calculation.model")
+const Beat = require("../beat/beat.model")
 
 const {
   generateOTP,
@@ -14,11 +16,10 @@ const {
 } = require("../../util/otpUtils");
 
 const generateToken = (id, email, role) => {
-  return sign({ userId: id, email, role  }, process.env.WEBTOKEN_SECRET_KEY, {
+  return sign({ userId: id, email, role }, process.env.WEBTOKEN_SECRET_KEY, {
     expiresIn: "30d",
   });
 };
-
 
 const hashPassword = async (password) => {
   const salt = await bcrypt.genSalt(8);
@@ -107,7 +108,7 @@ const registerUser = async (req, res) => {
       role,
     });
 
-    await newUser.save();  
+    await newUser.save();
 
     // Generate token
     const token = generateToken(newUser._id, newUser.email, newUser.role);
@@ -122,8 +123,6 @@ const registerUser = async (req, res) => {
     res.status(500).json({ message: "Internal Server Error" });
   }
 };
-
-
 
 // Resend OTP
 const resendOtp = async (req, res) => {
@@ -226,8 +225,8 @@ const authenticateUser = async (req, res) => {
       res.status(400).json({ message: "User not found!" });
       return;
     }
-    if(user.blacklist && new Date() > new Date(user.subscriptionEndDAte)){
-      res.status(400).json({message : "You are in blacklist!!"})
+    if (user.blacklist && new Date() > new Date(user.subscriptionEndDAte)) {
+      res.status(400).json({ message: "You are in blacklist!!" });
     }
 
     const passwordMatch = await bcrypt.compare(password, user.password);
@@ -262,12 +261,12 @@ const authenticateUser = async (req, res) => {
 const editUserProfile = async (req, res) => {
   try {
     console.log(req.body);
-    const imageUrl = `${req.file.filename}`; 
-    if(imageUrl){
+    const imageUrl = `${req.file.filename}`;
+    if (imageUrl) {
       req.body.avatar = imageUrl;
     }
     if (!req.params.userId) {
-     return  res.status(400).json({ message: "Unauthorized user" });
+      return res.status(400).json({ message: "Unauthorized user" });
     }
     if (req.body.newpassword) {
       if (req.body.newpassword === req.body.confirmPassword) {
@@ -277,11 +276,13 @@ const editUserProfile = async (req, res) => {
       req.body.password = await hashPassword(req.body.password);
     }
 
-    
-
-    const updatedUser = await User.findByIdAndUpdate(req.params.userId, req.body, {
-      new: true,
-    });
+    const updatedUser = await User.findByIdAndUpdate(
+      req.params.userId,
+      req.body,
+      {
+        new: true,
+      }
+    );
 
     if (!updatedUser) {
       res.status(404).json({ message: "User not found" });
@@ -426,6 +427,72 @@ const logout = (req, res) => {
   }
 };
 
+
+
+const userAlltotalCredit = async (req, res) => {
+  const { userId } = req.params;
+
+  try {
+    // Check if user exists
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(400).json({ message: "User not found" });
+    }
+
+    // Aggregate to calculate total credit and count extra credit packages
+    const result = await Transection.aggregate([
+      { $match: { userId: mongoose.Types.ObjectId(userId) } }, 
+      {
+        $group: {
+          _id: "$userId",
+          totalCredit: { $sum: "$credit" }, 
+          extraCreditCount: {
+            $sum: { $cond: [{ $eq: ["$method", "extracredit"] }, 1, 0] }, // Count extra credit packages
+          },
+        },
+      },
+    ]);
+
+    if (result.length > 0) {
+      const { totalCredit, extraCreditCount } = result[0];
+      return res.status(200).json({ totalCredit, extraCreditCount });
+    } else {
+      // Return 0 if no transactions exist for the user
+      return res.status(200).json({ totalCredit: 0, extraCreditCount: 0 });
+    }
+  } catch (error) {
+    console.error("Error calculating total credit and extra credit count:", error);
+    return res.status(500).json({ message: "Internal server error" });
+  }
+};
+
+const allRegisterBeat = async (req, res) => {
+  const { userId } = req.params;
+
+  try {
+    
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(400).json({ message: "User not found" });
+    }
+
+    
+    const beats = await Beat.find({ userId });
+
+    // Check if the user has any beats
+    if (beats.length === 0) {
+      return res.status(404).json({ message: "No beats found for this user" });
+    }
+
+    // Return the beats
+    return res.status(200).json(beats);
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ message: "Server error" });
+  }
+};
+
+
 module.exports = {
   checkAuthStatus,
   logout,
@@ -438,4 +505,6 @@ module.exports = {
   resendOtp,
   registerUser,
   getAllUsers,
+  userAlltotalCredit, 
+  allRegisterBeat
 };

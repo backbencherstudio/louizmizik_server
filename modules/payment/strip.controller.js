@@ -86,6 +86,9 @@ exports.createSubscription = async (req, res) => {
         credit: 20, 
         userId: user._id,
         customerId: customerId, 
+        method: "subscription",
+        amount : 10
+        
       });
 
       await newTransaction.save();
