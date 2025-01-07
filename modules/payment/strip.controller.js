@@ -6,6 +6,7 @@ const router = express.Router();
 const Subscription = require("./stripe.model");
 const User = require("../users/users.models");
 const Transection = require("../TotalCalculation/calculation.model");
+const nodemailer = require("nodemailer");
 
 
 exports.createCustomer = async (req, res) => {
@@ -16,10 +17,8 @@ exports.createCustomer = async (req, res) => {
   if (!user) {
     return res.status(400).json({ message: "User not found" });
   }
-  if (user && user.customerId !== undefined) {
+  if (user && user.customerId != null) {
     console.log("User already has a customer ID:", user.customerId);
-    // const subscriver = await Subscription.findOne({ customerId: user.customerId });
-    // console.log(subscriver, "5000000000000000000000");
     return res.status(200).json({ customerId: user.customerId });
   } else {
     try {
