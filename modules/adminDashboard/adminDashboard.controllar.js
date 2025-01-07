@@ -7,8 +7,6 @@ const Subscription = require("../payment/stripe.model")
 
 
 exports.adminDashboard = async (req, res) =>{
-    const User = require("../models/User"); 
-
     try {
        
         const totalUsers = await User.countDocuments();
@@ -16,16 +14,27 @@ exports.adminDashboard = async (req, res) =>{
         const result = await Transection.aggregate([
             {
               $group: {
-                _id: null, // Group all documents together
+                _id: null, 
                 totalCredit: { $sum: "$credit" },
               },
             },
           ]);
           const totalCredit = result.length > 0 ? result[0].totalCredit : 0;
+
+          const revenueResult = await Transection.aggregate([
+            {
+              $group: {
+                _id: null,
+                totalRevenue: { $sum: "$amount" },
+              },
+            },
+          ]);
+          const totalRevenue = revenueResult.length > 0 ? revenueResult[0].totalRevenue : 0;
           const data  = {
             totalUsers,
             totalRegisteredBeats,
-            totalCredit
+            totalCredit,
+            totalRevenue
           }
       
           res.status(200).json({
