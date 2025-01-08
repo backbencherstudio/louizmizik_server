@@ -58,6 +58,8 @@ exports.createSubscription = async (req, res) => {
   }
 
   try {
+    const { userId } = req.params;
+    const user = await User.findById(userId);
     // Create the subscription
     const subscription = await stripe.subscriptions.create({
       customer: customerId,
@@ -68,6 +70,7 @@ exports.createSubscription = async (req, res) => {
     // Save subscription details in MongoDB
     const newSubscription = new Subscription({
       customerId,
+      userId : user._id,
       subscriptionId: subscription.id,
       status: subscription.status,
       startDate: new Date(), 
@@ -75,10 +78,9 @@ exports.createSubscription = async (req, res) => {
     });
 
     await newSubscription.save();
-    const { userId } = req.params;
-    const user = await User.findById(userId);
+    
 
-    console.log(user);
+    //console.log(user);
     if (user) {
       user.credit = (user.credit || 0) + 20;
 
