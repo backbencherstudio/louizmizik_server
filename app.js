@@ -90,7 +90,7 @@ app.post(
   "/webhook",
   express.raw({ type: "application/json" }),
   async (req, res) => {
-    const endpointSecret = "whsec_vv9rWBsQbtE13jyTvpziJdKRHQGrZz1O";
+    const endpointSecret = "whsec_dVyqF34hxv3hIlpgvH1KbEje5wCmCLBY";
 
     let event;
 
