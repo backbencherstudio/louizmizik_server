@@ -1,18 +1,17 @@
 require("dotenv").config();
-
+const nodemailer = require("nodemailer");
 const stripe = require("stripe")(process.env.STRIPE_SECRET_KEY);
 const express = require("express");
 const router = express.Router();
 const Subscription = require("./stripe.model");
 const User = require("../users/users.models");
 const Transection = require("../TotalCalculation/calculation.model");
-const nodemailer = require("nodemailer");
 
 exports.createCustomer = async (req, res) => {
   const { email, paymentMethodId } = req.body;
   const { userId } = req.params;
   const user = await User.findById(userId);
-  console.log(user);
+  //console.log(user);
   if (!user) {
     return res.status(400).json({ message: "User not found" });
   }
@@ -39,13 +38,11 @@ exports.createCustomer = async (req, res) => {
 
 exports.createSubscription = async (req, res) => {
   const { customerId, priceId } = req.body;
-  //console.log(customerId, priceId);
 
   const subscriber = await Subscription.findOne({ customerId: customerId });
   
   if (subscriber) {
-    //     console.log("Current Time:", Date.now());
-    // console.log("End Date Time:", new Date(subscriber.endDate).getTime());
+    
     if (Date.now() <= new Date(subscriber.endDate).getTime()) {
       return res
         .status(400)
@@ -56,6 +53,7 @@ exports.createSubscription = async (req, res) => {
   try {
     const { userId } = req.params;
     const user = await User.findById(userId);
+
     // Create the subscription
     const subscription = await stripe.subscriptions.create({
       customer: customerId,
@@ -165,7 +163,7 @@ exports.createPaymentInted = async (req, res) => {
 
 exports.getPlan = async (req, res) => {
   try {
-    const productId = "prod_RVOv4hXMeszfqN"; // Replace with your actual product ID
+    const productId = process.env.STRIPE_PLAN_ID; // Replace with your actual product ID
 
     // Fetch all prices associated with the product
     const prices = await stripe.prices.list({
@@ -189,6 +187,7 @@ exports.getPlan = async (req, res) => {
     res.status(500).json({ error: "Failed to fetch plans" });
   }
 };
+
 
 exports.cancelSubscription = async (req, res) => {
   const userId = req.params.userId;
@@ -216,7 +215,21 @@ exports.cancelSubscription = async (req, res) => {
     // Update subscription status in MongoDB
     subscription.status = "canceled";
     subscription.endDate = new Date();
+    user.active = false;
+    await user.save();
     await subscription.save();
+
+
+    // Send a confirmation email to the user
+    const mailOptions = {
+      from: process.env.EMAIL_USER,  // Sender address
+      to: user.email,                // Receiver address (User's email)
+      subject: 'Subscription Canceled', // Subject of the email
+      text: `Dear ${user.name},\n\nYour subscription has been successfully canceled.\n\nThank you for being with us!\n\nBest regards,\nLuiz Music`, // Body of the email
+    };
+
+    // Send the email
+    await transporter.sendMail(mailOptions);
 
     // Respond with success
     return res.status(200).json({
@@ -230,3 +243,16 @@ exports.cancelSubscription = async (req, res) => {
       .json({ message: "Failed to cancel subscription", error: error.message });
   }
 };
+
+
+
+// Create a transporter for Nodemailer to send email
+const transporter = nodemailer.createTransport({
+  host: "smtp.gmail.com",
+          port: 587,
+          secure: false,
+          auth: {
+            user: process.env.node_mailer_user,
+            pass: process.env.NODE_MAILER_PASSWORD,
+          },
+});
