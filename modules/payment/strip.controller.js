@@ -152,7 +152,7 @@ exports.createPaymentInted = async (req, res) => {
     const paymentIntent = await stripe.paymentIntents.create({
       amount: 1000, // The price in cents, adjust based on your price
       currency: "usd", // You can change this currency based on your requirement
-      description: "Premium Subscription", // A description for the payment
+      description: "Pr0", // A description for the payment
       payment_method_types: ["card"], // Allowing card payments
     });
 
