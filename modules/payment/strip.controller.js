@@ -49,7 +49,8 @@ exports.createSubscription = async (req, res) => {
     if (Date.now() <= new Date(subscriber.endDate).getTime()) {
       return res
         .status(400)
-        .json({ message: "Your Preveous Subscription time not finished!!!!!" });
+        // .json({ message: "Your Preveous Subscription time not finished!!!!!" });
+        .json({ message: "Your current subscription is still active. If you require additional credit, please purchase extra credit." });
     }
   }
 
