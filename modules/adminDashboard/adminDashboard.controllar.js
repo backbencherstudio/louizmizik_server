@@ -64,6 +64,55 @@ exports.adminDashboard = async (req, res) => {
       status: "canceled",
     });
 
+
+
+    // Aggregate canceled subscriptions by month
+    const canceledSubscriptions = await Subscription.aggregate([
+      {
+        $match: { status: "canceled" },
+      },
+      {
+        $group: {
+          _id: {
+            year: { $year: "$endDate" },
+            month: { $month: "$endDate" },
+          },
+          canceledCount: { $sum: 1 },
+        },
+      },
+    ]);
+
+     // Get the total subscriptions per month
+     const totalSubscriptions = await Subscription.aggregate([
+      {
+        $group: {
+          _id: {
+            year: { $year: "$startDate" },
+            month: { $month: "$startDate" },
+          },
+          totalCount: { $sum: 1 },
+        },
+      },
+    ]);
+
+    // Calculate percentages
+    const cancellationPercentages = canceledSubscriptions.map((canceled) => {
+      const total = totalSubscriptions.find(
+        (total) =>
+          total._id.year === canceled._id.year &&
+          total._id.month === canceled._id.month
+      );
+      const percentage = total
+        ? (canceled.canceledCount / total.totalCount) * 100
+        : 0;
+
+      return {
+        year: canceled._id.year,
+        month: canceled._id.month,
+        percentage: percentage.toFixed(2),
+      }
+    });
+
     const data = {
       totalUsers,
       totalActiveUsers,
@@ -74,6 +123,7 @@ exports.adminDashboard = async (req, res) => {
       totalSubscriptionCredit,
       totalExtraCredit,
       AvrgBeatRegistration,
+      cancellationPercentages
     };
 
     res.status(200).json({
@@ -307,3 +357,45 @@ const calculateDateRanges = () => {
     startOfYear: new Date(now.getFullYear(), 0, 1),
   };
 };
+
+
+
+// -----------------------------------------------
+
+exports.AllTransections = async (req, res) => {
+  try {
+    // Extract limit and page from query parameters
+    const limit = parseInt(req.query.limit) || 10; // Default limit is 10
+    const page = parseInt(req.query.page) || 1; // Default page is 1
+
+    // Fetch transactions with pagination
+    const transactions = await Transection.find()
+      .populate("userId", "name email") // Populate user details (adjust fields as necessary)
+      .sort({ createdAt: -1 }) // Sort by latest transactions
+      .skip((page - 1) * limit) // Skip documents for pagination
+      .limit(limit); // Limit the number of documents
+
+    // Fetch the latest transaction
+    const latestTransaction = await Transection.findOne().sort({ createdAt: -1 });
+
+    // Fetch the total count of transactions
+    const totalTransactions = await Transection.countDocuments();
+
+    // Send response
+    res.status(200).json({
+      success: true,
+      data: transactions,
+      latestTransaction, // Include the latest transaction
+      meta: {
+        total: totalTransactions,
+        page,
+        limit,
+        totalPages: Math.ceil(totalTransactions / limit),
+      },
+    });
+  } catch (error) {
+    console.error("Error fetching transactions:", error);
+    res.status(500).json({ success: false, message: "Server Error" });
+  }
+};
+

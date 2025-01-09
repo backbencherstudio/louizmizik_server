@@ -16,9 +16,7 @@ const nodemailer = require("nodemailer");
 const Subscription = require("./modules/payment/stripe.model");
 const Transection = require("./modules/TotalCalculation/calculation.model");
 
-const stripe = require("stripe")(
-  "sk_test_51QFpATLEvlBZD5dJjsneUWfIN2W2ok3yfxHN7qyLB2TRPYn0bs0UCzWytfZgZwrpcboY5GXMyen4BwCPthGLCrRX001T5gDgLK"
-);
+const stripe = require("stripe")( process.env.STRIPE_SECRET_KEY);
 
 const path = require("path");
 
@@ -144,11 +142,11 @@ app.post(
           from: '"LuiZ Music" <your-smtp-email@example.com>',
           to: user.email, // User's email
           subject: "Credits Added to Your Account",
-          text: `Hi ${user.name},\n\nYou have been awarded 10 additional credits! Your new credit balance is ${user.credit}.\n\nThank you for using our service!\n\nBest regards,\nYour App Team`,
+          text: `Hi ${user.name},\n\nYou have been awarded 10 additional credits! Your new credit balance is ${user.credit}.\n\nThank you for using our service!\n\nBest regards,\nLuiz Music`,
           html: `<p>Hi ${user.name},</p>
                <p>You have been awarded <strong>10 additional credits</strong>! Your new credit balance is <strong>${user.credit}</strong>.</p>
                <p>Thank you for using our service!</p>
-               <p>Best regards,<br>Your App Team</p>`,
+               <p>Best regards,<br>Luiz Music Team</p>`,
         };
 
         transporter.sendMail(mailOptions, (error, info) => {
@@ -161,15 +159,13 @@ app.post(
       }
     }
 
-
-
     if (event.type === "invoice.payment_succeeded") {
-      const invoice = event.data.object; 
-      //console.log("aitaaa", invoice)
-      const subscriptionId = invoice.subscription; 
-       const userId = invoice?.subscription_details?.metadata?.userId ;
-       const customerId = invoice?.subscription_details?.metadata?.customerId;
-     
+      const invoice = event.data.object;
+      //console.log("aitaaa", invoice);
+      const subscriptionId = invoice.subscription;
+      const userId = invoice?.subscription_details?.metadata?.userId;
+      const customerId = invoice?.subscription_details?.metadata?.customerId;
+
       // stripe.subscriptions
       //   .retrieve(subscriptionId)
       //   .then((subscription) => {
@@ -180,56 +176,44 @@ app.post(
       //     console.error("Failed to retrieve subscription:", err);
       //   });
 
-
-
-
-
-
-
       // async function handleSubscription(subscriptionId) {
       //   try {
       //     // Fetch the subscription to get metadata
       //     const subscription = await stripe.subscriptions.retrieve(subscriptionId);
-      
+
       //     userId = subscription.metadata.userId;
       //     customerId = subscription.metadata.customerId;
-      
+
       //     if (!userId) {
       //       throw new Error("User ID is missing in subscription metadata");
       //     }
-      
+
       //     // Save subscription details in MongoDB
       //     // const user = await User.findById(userId);
-      
+
       //     // if (!user) {
       //     //   throw new Error(`User not found for ID: ${userId}`);
       //     // }
-      
+
       //     // Add logic to save or process subscription details here
       //     console.log("Subscription details saved successfully.");
       //   } catch (err) {
       //     console.error("Error handling subscription:", err);
       //   }
       // }
-      
+
       // // Example call
       // handleSubscription(subscriptionId);
-
-
-
-
-
-
 
       // ---------------------------
       // Save subscription details in MongoDB
       const user = await User.findById(userId);
-      console.log("user" , user)
+      console.log("user", user);
       const newSubscription = new Subscription({
         customerId,
         userId: user._id,
         subscriptionId: subscriptionId,
-        status : "active",
+        status: "active",
         startDate: new Date(),
         endDate: new Date(new Date().setDate(new Date().getDate() + 30)),
       });
@@ -239,6 +223,7 @@ app.post(
       //console.log(user);
       if (user) {
         user.credit = (user.credit || 0) + 20;
+        user.active= true;
 
         const newTransaction = new Transection({
           credit: 20,
@@ -269,7 +254,7 @@ app.post(
           html: `<p>Hi ${user.name},</p>
                <p>A new subscription has been added to your account. Your current credit balance is now <strong>${user.credit}</strong>.</p>
                <p>Thank you for choosing our service!</p>
-               <p>Best regards,<br>Your Company Name</p>`,
+               <p>Best regards,<br>Luiz Music</p>`,
         };
 
         try {
@@ -282,7 +267,24 @@ app.post(
       // ----------------------------------------------------end----------------------------
     }
 
-    
+    // if (event.type === "customer.subscription.deleted") {
+    //   console.log(
+    //     "deleleteteteteteteteteteteeeeeeeeeeeeeeeeeeeeeeeeeeeeeeddfdd"
+    //   );
+    //   const Onesubscription = event.data.object;
+    //   const customerId = Onesubscription.metadata.customerId;
+
+    //   const subscription = await Subscription.findOne({
+    //     customerId: customerId,
+    //   });
+    //   if (!subscription) {
+    //     return res.status(404).json({ message: "Subscription not found" });
+    //   }
+
+    //   subscription.status = "canceled";
+    //   subscription.endDate = new Date();
+    //   await subscription.save();
+    // }
   }
 );
 
