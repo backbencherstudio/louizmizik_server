@@ -25,7 +25,8 @@ const UserSchema = new Schema(
     customerId: { type: String ,default : null},
     country: {type : String},
     blacklist : {type : Boolean, default: false},
-    subscriptionEndDAte: {type: Date, default: null}
+    subscriptionEndDAte: {type: Date, default: null},
+    active: {type: Boolean, default:false}
   },
   { timestamps: true }
 );
