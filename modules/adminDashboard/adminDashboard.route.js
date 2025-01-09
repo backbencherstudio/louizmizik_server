@@ -1,11 +1,12 @@
 const express = require("express");
-const { adminDashboard, addUserBlacklist, allUserDetails, getUserRegistrationsByTimeframe } = require("./adminDashboard.controllar");
+const { adminDashboard, addUserBlacklist, allUserDetails, getUserRegistrationsByTimeframe, revenueDashboard } = require("./adminDashboard.controllar");
 
 
 const router = express.Router();
 
 
 router.get("/adminDashboard", adminDashboard);
+router.get("/revenueDashboard", revenueDashboard)
 // here will be add varify Admin
 router.delete("user-blacklist/:userId" , addUserBlacklist)
 

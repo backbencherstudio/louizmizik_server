@@ -13,10 +13,13 @@ const User = require("./modules/users/users.models");
 ExtraCredit = require("./modules/creditpayment/creditpayment.route");
 AdminRouter = require("./modules/adminDashboard/adminDashboard.route");
 const nodemailer = require("nodemailer");
+const Subscription = require("./modules/payment/stripe.model");
+const Transection = require("./modules/TotalCalculation/calculation.model");
+
 const stripe = require("stripe")(
   "sk_test_51QFpATLEvlBZD5dJjsneUWfIN2W2ok3yfxHN7qyLB2TRPYn0bs0UCzWytfZgZwrpcboY5GXMyen4BwCPthGLCrRX001T5gDgLK"
 );
-const Transection = require("./modules/TotalCalculation/calculation.model")
+
 const path = require("path");
 
 const app = express();
@@ -60,7 +63,7 @@ app.use("/api/beat", beatRoute);
 app.use("/api/payments", stripeRoute);
 app.use("/api/credit", ExtraCredit);
 app.use("/api/dashboard", UserDashboard);
-app.use("/api/admin" , AdminRouter)
+app.use("/api/admin", AdminRouter);
 
 app.get("/success", async (req, res) => {
   const sessionId = req.query.session_id;
@@ -90,8 +93,8 @@ app.post(
   "/webhook",
   express.raw({ type: "application/json" }),
   async (req, res) => {
-    const endpointSecret = "whsec_vv9rWBsQbtE13jyTvpziJdKRHQGrZz1O";
-
+    const endpointSecret = process.env.STRIPE_WEBHOOK_SECRET_EXTRA_CREDIT;
+    //console.log("ohohohohohoh");
     let event;
 
     try {
@@ -118,11 +121,11 @@ app.post(
       if (user) {
         user.credit += 10;
         const newTransaction = new Transection({
-          credit: 10, 
+          credit: 10,
           userId: user._id,
-          customerId: user.customerId, 
+          customerId: user.customerId,
           method: "extracredit",
-          amount : 5
+          amount: 5,
         });
         await newTransaction.save();
         await user.save();
@@ -158,7 +161,128 @@ app.post(
       }
     }
 
-    res.status(200).send();
+
+
+    if (event.type === "invoice.payment_succeeded") {
+      const invoice = event.data.object; 
+      //console.log("aitaaa", invoice)
+      const subscriptionId = invoice.subscription; 
+       const userId = invoice?.subscription_details?.metadata?.userId ;
+       const customerId = invoice?.subscription_details?.metadata?.customerId;
+     
+      // stripe.subscriptions
+      //   .retrieve(subscriptionId)
+      //   .then((subscription) => {
+      //      userId = subscription.metadata.userId;
+      //      customerId = subscription.metadata.customerId;
+      //   })
+      //   .catch((err) => {
+      //     console.error("Failed to retrieve subscription:", err);
+      //   });
+
+
+
+
+
+
+
+      // async function handleSubscription(subscriptionId) {
+      //   try {
+      //     // Fetch the subscription to get metadata
+      //     const subscription = await stripe.subscriptions.retrieve(subscriptionId);
+      
+      //     userId = subscription.metadata.userId;
+      //     customerId = subscription.metadata.customerId;
+      
+      //     if (!userId) {
+      //       throw new Error("User ID is missing in subscription metadata");
+      //     }
+      
+      //     // Save subscription details in MongoDB
+      //     // const user = await User.findById(userId);
+      
+      //     // if (!user) {
+      //     //   throw new Error(`User not found for ID: ${userId}`);
+      //     // }
+      
+      //     // Add logic to save or process subscription details here
+      //     console.log("Subscription details saved successfully.");
+      //   } catch (err) {
+      //     console.error("Error handling subscription:", err);
+      //   }
+      // }
+      
+      // // Example call
+      // handleSubscription(subscriptionId);
+
+
+
+
+
+
+
+      // ---------------------------
+      // Save subscription details in MongoDB
+      const user = await User.findById(userId);
+      console.log("user" , user)
+      const newSubscription = new Subscription({
+        customerId,
+        userId: user._id,
+        subscriptionId: subscriptionId,
+        status : "active",
+        startDate: new Date(),
+        endDate: new Date(new Date().setDate(new Date().getDate() + 30)),
+      });
+
+      await newSubscription.save();
+
+      //console.log(user);
+      if (user) {
+        user.credit = (user.credit || 0) + 20;
+
+        const newTransaction = new Transection({
+          credit: 20,
+          userId: user._id,
+          customerId: customerId,
+          method: "subscription",
+          amount: 10,
+        });
+
+        await newTransaction.save();
+        await user.save();
+
+        const transporter = nodemailer.createTransport({
+          host: "smtp.gmail.com",
+          port: 587,
+          secure: false,
+          auth: {
+            user: process.env.node_mailer_user,
+            pass: process.env.NODE_MAILER_PASSWORD,
+          },
+        });
+
+        const mailOptions = {
+          from: '"Luiz Music" <your_email@example.com>', // Sender address
+          to: user.email, // User's email address
+          subject: "New Subscription Added",
+          text: `Hi ${user.name},\n\nA new subscription has been added to your account. Your current credit balance is now ${user.credit}.\n\nThank you for choosing our service!\n\nBest regards,\nYour Company Name`,
+          html: `<p>Hi ${user.name},</p>
+               <p>A new subscription has been added to your account. Your current credit balance is now <strong>${user.credit}</strong>.</p>
+               <p>Thank you for choosing our service!</p>
+               <p>Best regards,<br>Your Company Name</p>`,
+        };
+
+        try {
+          await transporter.sendMail(mailOptions);
+          console.log("Email sent successfully!");
+        } catch (error) {
+          console.error("Error sending email:", error);
+        }
+      }
+      // ----------------------------------------------------end----------------------------
+    }
+
+    
   }
 );
 

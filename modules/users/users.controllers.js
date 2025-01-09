@@ -47,7 +47,6 @@ const getAllUsers = async (req, res) => {
 };
 
 const registerUser = async (req, res) => {
-  var country;
   try {
     let { name, email, password, role } = req.body;
 
@@ -100,24 +99,18 @@ const registerUser = async (req, res) => {
       res.status(400).json({ message: "Email already exists" });
       return;
     }
-    // ---------------------------------------------------
-    async function getLocationByIP() {
-      try {
-          const response = await fetch('http://get.geojs.io/v1/ip/geo.json');
-          const data = await response.json();
-  
-          console.log(`Country: ${data.country}`);
-          country = data.country;
-        
-          
-      } catch (error) {
-          console.error('Error fetching IP-based location:', error.message);
+
+    // Fetch the country based on IP
+    let country = "Unknown"; // Default value in case location fetch fails
+    try {
+      const response = await fetch("http://get.geojs.io/v1/ip/geo.json");
+      if (response.ok) {
+        const data = await response.json();
+        country = data.country || "Unknown";
       }
-  }
-  
-  getLocationByIP();
-  
-  // -----------------------------------------------------------------------------------------
+    } catch (error) {
+      console.error("Error fetching IP-based location:", error.message);
+    }
 
     // Create a new user
     const newUser = new User({
@@ -125,7 +118,7 @@ const registerUser = async (req, res) => {
       email,
       password: hashedPassword,
       role,
-      country
+      country, // Ensure the fetched country is added here
     });
 
     await newUser.save();
@@ -143,6 +136,7 @@ const registerUser = async (req, res) => {
     res.status(500).json({ message: "Internal Server Error" });
   }
 };
+
 
 // Resend OTP
 const resendOtp = async (req, res) => {
