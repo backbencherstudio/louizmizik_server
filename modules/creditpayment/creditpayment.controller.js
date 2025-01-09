@@ -27,7 +27,8 @@ exports.extraCredit = async (req, res) => {
       metadata: {
         userId: user._id.toString(), 
       },
-      success_url: "https://0193-103-161-9-102.ngrok-free.app/success?session_id={CHECKOUT_SESSION_ID}",
+      // success_url: "https://0193-103-161-9-102.ngrok-free.app/success?session_id={CHECKOUT_SESSION_ID}",
+      success_url: "http://localhost:5173",
       cancel_url: "https://0193-103-161-9-102.ngrok-free.app",
     });
 
