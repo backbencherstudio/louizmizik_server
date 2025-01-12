@@ -189,6 +189,7 @@ exports.allUserDetails = async (req, res) => {
 
 exports.getUserRegistrationsByTimeframe = async (req, res) => {
   try {
+    //console.log(timeframe, "1000000000000000000000")
     const { timeframe } = req.query;
     const {
       lastDay,
@@ -398,4 +399,46 @@ exports.AllTransections = async (req, res) => {
     res.status(500).json({ success: false, message: "Server Error" });
   }
 };
+
+
+// Controller for searching beats
+exports.searchBeats = async (req, res) => {
+  try {
+    const { query } = req.query;
+
+
+    // const response = await axios.get(`http://localhost:3000/beats/search`, {
+    //   params: { query },
+    // });    call like this in frontend
+
+    
+
+    if (!query) {
+      return res.status(400).json({ error: "Query parameter is required" });
+    }
+
+    // Create a regex for case-insensitive partial match
+    const regex = new RegExp(query, "i");
+
+    // Search across multiple fields
+    const beats = await Beat.find({
+      $or: [
+        { beatName: regex },
+        { fullName: regex },
+        { genre: regex },
+        { producerName: regex },
+        { collaborators: regex },
+        { youtubeUrl: regex },
+        { audioPath: regex },
+        { imagePath: regex },
+      ],
+    });
+
+    res.status(200).json(beats);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "An error occurred while searching for beats" });
+  }
+};
+
 
