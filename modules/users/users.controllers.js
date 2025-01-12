@@ -484,27 +484,34 @@ const allRegisterBeat = async (req, res) => {
   const { userId } = req.params;
 
   try {
-    
+    // Find the user first
     const user = await User.findById(userId);
     if (!user) {
       return res.status(400).json({ message: "User not found" });
     }
 
-    
+    // Query for the beats of the user
     const beats = await Beat.find({ userId });
 
+    // Query for all transactions related to the user
+    const transactions = await Transection.find({ userId });
+
     // Check if the user has any beats
-    if (beats.length === 0) {
-      return res.status(404).json({ message: "No beats found for this user" });
+    if (beats.length === 0 && transactions.length === 0) {
+      return res.status(404).json({ message: "No beats or transactions found for this user" });
     }
 
-    // Return the beats
-    return res.status(200).json(beats);
+    // Return the beats and transactions together
+    return res.status(200).json({
+      beats,
+      transactions,
+    });
   } catch (error) {
     console.error(error);
     return res.status(500).json({ message: "Server error" });
   }
 };
+
 
 
 module.exports = {
