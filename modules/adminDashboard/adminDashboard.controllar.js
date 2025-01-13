@@ -9,38 +9,41 @@ exports.adminDashboard = async (req, res) => {
     const totalRegisteredBeats = await Beat.countDocuments({ register: true });
     const result = await Transection.aggregate([
       {
-        $group: {
-          _id: null,
-          totalCredit: { $sum: "$credit" },
+        $facet: {
+          totalCredit: [
+            {
+              $group: {
+                _id: null,
+                totalCredit: { $sum: "$credit" },
+              },
+            },
+          ],
+          totalRevenue: [
+            {
+              $group: {
+                _id: null,
+                totalRevenue: { $sum: "$amount" },
+              },
+            },
+          ],
+          totalExtraCredit: [
+            {
+              $match: { method: "extracredit" },
+            },
+            {
+              $group: {
+                _id: null,
+                totalExtraCredit: { $sum: "$credit" },
+              },
+            },
+          ],
         },
       },
     ]);
-    const totalCredit = result.length > 0 ? result[0].totalCredit : 0;
-
-    const revenueResult = await Transection.aggregate([
-      {
-        $group: {
-          _id: null,
-          totalRevenue: { $sum: "$amount" },
-        },
-      },
-    ]);
-    const totalRevenue =
-      revenueResult.length > 0 ? revenueResult[0].totalRevenue : 0;
-
-    const transection = await Transection.aggregate([
-      {
-        $match: { method: "extracredit" },
-      },
-      {
-        $group: {
-          _id: null,
-          totalExtraCredit: { $sum: "$credit" },
-        },
-      },
-    ]);
-
-    const totalExtraCredit = transection[0]?.totalExtraCredit || 0;
+    
+    const totalCredit = result[0]?.totalCredit[0]?.totalCredit || 0;
+    const totalRevenue = result[0]?.totalRevenue[0]?.totalRevenue || 0;
+    const totalExtraCredit = result[0]?.totalExtraCredit[0]?.totalExtraCredit || 0;
 
     const Subscriptiontransection = await Transection.aggregate([
       {
