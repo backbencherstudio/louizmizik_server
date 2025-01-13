@@ -28,8 +28,8 @@ exports.create = async (req, res) => {
 
         // Send email to support team
         await transporter.sendMail({
-            from: `"Support" <${process.env.node_mailer_user}>`,
-            to: 'support-team@example.com', // Replace with your support team's email
+            from: `"Support" <${email}>`,
+            to: `${process.env.node_mailer_user}`, // Replace with your support team's email
             subject: 'New Support Request',
             text: `Name: ${name}\nEmail: ${email}\nIssue: ${issue}`,
         });
