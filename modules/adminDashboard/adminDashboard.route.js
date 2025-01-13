@@ -1,5 +1,5 @@
 const express = require("express");
-const { adminDashboard, addUserBlacklist, allUserDetails, getUserRegistrationsByTimeframe, revenueDashboard, AllTransections, searchBeats } = require("./adminDashboard.controllar");
+const { adminDashboard, addUserBlacklist, allUserDetails, getUserRegistrationsByTimeframe, revenueDashboard, AllTransections, searchBeats, getRevenueAndCredit } = require("./adminDashboard.controllar");
 
 
 const router = express.Router();
@@ -14,4 +14,5 @@ router.get("/allUserDetails", allUserDetails)
 router.get("/user-registrations", getUserRegistrationsByTimeframe)
 router.get("/AllTransections", AllTransections)
 router.get("/search", searchBeats)
+router.get("/revenueChart", getRevenueAndCredit )
 module.exports = router;

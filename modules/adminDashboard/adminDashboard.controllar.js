@@ -9,38 +9,41 @@ exports.adminDashboard = async (req, res) => {
     const totalRegisteredBeats = await Beat.countDocuments({ register: true });
     const result = await Transection.aggregate([
       {
-        $group: {
-          _id: null,
-          totalCredit: { $sum: "$credit" },
+        $facet: {
+          totalCredit: [
+            {
+              $group: {
+                _id: null,
+                totalCredit: { $sum: "$credit" },
+              },
+            },
+          ],
+          totalRevenue: [
+            {
+              $group: {
+                _id: null,
+                totalRevenue: { $sum: "$amount" },
+              },
+            },
+          ],
+          totalExtraCredit: [
+            {
+              $match: { method: "extracredit" },
+            },
+            {
+              $group: {
+                _id: null,
+                totalExtraCredit: { $sum: "$credit" },
+              },
+            },
+          ],
         },
       },
     ]);
-    const totalCredit = result.length > 0 ? result[0].totalCredit : 0;
-
-    const revenueResult = await Transection.aggregate([
-      {
-        $group: {
-          _id: null,
-          totalRevenue: { $sum: "$amount" },
-        },
-      },
-    ]);
-    const totalRevenue =
-      revenueResult.length > 0 ? revenueResult[0].totalRevenue : 0;
-
-    const transection = await Transection.aggregate([
-      {
-        $match: { method: "extracredit" },
-      },
-      {
-        $group: {
-          _id: null,
-          totalExtraCredit: { $sum: "$credit" },
-        },
-      },
-    ]);
-
-    const totalExtraCredit = transection[0]?.totalExtraCredit || 0;
+    
+    const totalCredit = result[0]?.totalCredit[0]?.totalCredit || 0;
+    const totalRevenue = result[0]?.totalRevenue[0]?.totalRevenue || 0;
+    const totalExtraCredit = result[0]?.totalExtraCredit[0]?.totalExtraCredit || 0;
 
     const Subscriptiontransection = await Transection.aggregate([
       {
@@ -438,6 +441,67 @@ exports.searchBeats = async (req, res) => {
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: "An error occurred while searching for beats" });
+  }
+};
+
+
+exports.getRevenueAndCredit = async (req, res) => {
+  try {
+    const today = new Date();
+    const startOfDay = new Date(today.setHours(0, 0, 0, 0));
+    const startOfWeek = new Date(today.setDate(today.getDate() - today.getDay()));
+    const startOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
+    const startOfYear = new Date(today.getFullYear(), 0, 1);
+    const last90Days = new Date(today.setDate(today.getDate() - 90));
+
+    const totalRevenueAndCredit = async (startDate, endDate = new Date()) => {
+      return Transection.aggregate([
+        { $match: { createdAt: { $gte: startDate, $lte: endDate } } },
+        { 
+          $group: { 
+            _id: null, 
+            totalRevenue: { $sum: "$amount" },
+            totalCredit: { $sum: "$credit" }
+          } 
+        },
+      ]);
+    };
+
+    const [day, week, month, year, last90] = await Promise.all([
+      totalRevenueAndCredit(startOfDay),
+      totalRevenueAndCredit(startOfWeek),
+      totalRevenueAndCredit(startOfMonth),
+      totalRevenueAndCredit(startOfYear),
+      totalRevenueAndCredit(last90Days),
+    ]);
+
+    const response = {
+      day: {
+        revenue: day[0]?.totalRevenue || 0,
+        credit: day[0]?.totalCredit || 0,
+      },
+      week: {
+        revenue: week[0]?.totalRevenue || 0,
+        credit: week[0]?.totalCredit || 0,
+      },
+      month: {
+        revenue: month[0]?.totalRevenue || 0,
+        credit: month[0]?.totalCredit || 0,
+      },
+      year: {
+        revenue: year[0]?.totalRevenue || 0,
+        credit: year[0]?.totalCredit || 0,
+      },
+      last90Days: {
+        revenue: last90[0]?.totalRevenue || 0,
+        credit: last90[0]?.totalCredit || 0,
+      },
+    };
+
+    return res.status(200).json(response);
+  } catch (err) {
+    console.error(err);
+    return res.status(500).json({ message: "Server Error" });
   }
 };
 
