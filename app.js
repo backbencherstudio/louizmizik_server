@@ -16,6 +16,7 @@ const nodemailer = require("nodemailer");
 const Subscription = require("./modules/payment/stripe.model");
 const Transection = require("./modules/TotalCalculation/calculation.model");
 const support = require("./modules/supports/support.route")
+const testApiRoute = require("./modules/test3rdApi/testApi.route")
 
 const stripe = require("stripe")( process.env.STRIPE_SECRET_KEY);
 
@@ -64,6 +65,9 @@ app.use("/api/credit", ExtraCredit);
 app.use("/api/dashboard", UserDashboard);
 app.use("/api/admin", AdminRouter);
 app.use("/api/support", support)
+// optional----------------------
+app.use("/api/safeApi", testApiRoute)
+
 
 app.get("/success", async (req, res) => {
   const sessionId = req.query.session_id;
