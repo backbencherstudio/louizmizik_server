@@ -15,10 +15,10 @@ const AdminRouter = require("./modules/adminDashboard/adminDashboard.route");
 const nodemailer = require("nodemailer");
 const Subscription = require("./modules/payment/stripe.model");
 const Transection = require("./modules/TotalCalculation/calculation.model");
-const support = require("./modules/supports/support.route")
-const testApiRoute = require("./modules/test3rdApi/testApi.route")
+const support = require("./modules/supports/support.route");
+const testApiRoute = require("./modules/test3rdApi/testApi.route");
 
-const stripe = require("stripe")( process.env.STRIPE_SECRET_KEY);
+const stripe = require("stripe")(process.env.STRIPE_SECRET_KEY);
 
 const path = require("path");
 
@@ -64,10 +64,9 @@ app.use("/api/payments", stripeRoute);
 app.use("/api/credit", ExtraCredit);
 app.use("/api/dashboard", UserDashboard);
 app.use("/api/admin", AdminRouter);
-app.use("/api/support", support)
+app.use("/api/support", support);
 // optional----------------------
-app.use("/api/safeApi", testApiRoute)
-
+app.use("/api/safeApi", testApiRoute);
 
 app.get("/success", async (req, res) => {
   const sessionId = req.query.session_id;
@@ -127,6 +126,8 @@ app.post(
         const newTransaction = new Transection({
           credit: 10,
           userId: user._id,
+          userNAme: user.name,
+          userEmail: user.email,
           customerId: user.customerId,
           method: "extracredit",
           amount: 5,
@@ -218,6 +219,8 @@ app.post(
       const newSubscription = new Subscription({
         customerId,
         userId: user._id,
+        userNAme: user.name,
+        userEmail: user.email,
         subscriptionId: subscriptionId,
         status: "active",
         startDate: new Date(),
@@ -229,14 +232,14 @@ app.post(
       //console.log(user);
       if (user) {
         user.credit = (user.credit || 0) + 20;
-        user.active= true;
+        user.active = true;
 
         const newTransaction = new Transection({
           credit: 20,
           userId: user._id,
           customerId: customerId,
           method: "subscription",
-          amount: 10,
+          amount: 9.99,
         });
 
         await newTransaction.save();

@@ -5,6 +5,8 @@ const TransectionSchema = new Schema(
   {
    credit: { type: Number, default: 0 },
     userId: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
+    userNAme : {type :String},
+    userEmail : {type : String},
     customerId: {type: String},
     method: {
       type: String,
@@ -12,6 +14,7 @@ const TransectionSchema = new Schema(
       required: true, 
     },
     amount : {type:Number},
+
   },
   { timestamps: true }
 );
