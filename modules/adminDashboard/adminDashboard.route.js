@@ -11,7 +11,7 @@ router.get("/revenueDashboard", revenueDashboard)
 router.delete("/user-blacklist/:userId" , addUserBlacklist)
 
 router.get("/allUserDetails", allUserDetails)
-router.get("/users", getUserRegistrationsByTimeframe)
+router.get("/user-registrations", getUserRegistrationsByTimeframe)
 router.get("/AllTransections", AllTransections)
 router.get("/search", searchBeats)
 router.get("/revenueChart", getRevenueAndCredit )
