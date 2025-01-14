@@ -5,8 +5,8 @@ const nodemailer = require("nodemailer");
 const { sign, verify } = require("jsonwebtoken");
 
 const User = require("./users.models");
-const Transection = require("../TotalCalculation/calculation.model")
-const Beat = require("../beat/beat.model")
+const Transection = require("../TotalCalculation/calculation.model");
+const Beat = require("../beat/beat.model");
 
 const {
   generateOTP,
@@ -137,7 +137,6 @@ const registerUser = async (req, res) => {
   }
 };
 
-
 // Resend OTP
 const resendOtp = async (req, res) => {
   try {
@@ -250,7 +249,7 @@ const authenticateUser = async (req, res) => {
       res.status(400).json({ message: "Invalid email or password" });
       return;
     }
-   
+
     const token = sign(
       { userEmail: user.email, userId: user._id },
       process.env.WEBTOKEN_SECRET_KEY,
@@ -442,26 +441,23 @@ const logout = (req, res) => {
   }
 };
 
-
-
 const userAlltotalCredit = async (req, res) => {
   const { userId } = req.params;
 
   try {
-   
     const user = await User.findById(userId);
     if (!user) {
       return res.status(400).json({ message: "User not found" });
     }
 
     const result = await Transection.aggregate([
-      { $match: { userId: mongoose.Types.ObjectId(userId) } }, 
+      { $match: { userId: mongoose.Types.ObjectId(userId) } },
       {
         $group: {
           _id: "$userId",
-          totalCredit: { $sum: "$credit" }, 
+          totalCredit: { $sum: "$credit" },
           extraCreditCount: {
-            $sum: { $cond: [{ $eq: ["$method", "extracredit"] }, 1, 0] }, 
+            $sum: { $cond: [{ $eq: ["$method", "extracredit"] }, 1, 0] },
           },
         },
       },
@@ -475,7 +471,10 @@ const userAlltotalCredit = async (req, res) => {
       return res.status(200).json({ totalCredit: 0, extraCreditCount: 0 });
     }
   } catch (error) {
-    console.error("Error calculating total credit and extra credit count:", error);
+    console.error(
+      "Error calculating total credit and extra credit count:",
+      error
+    );
     return res.status(500).json({ message: "Internal server error" });
   }
 };
@@ -484,28 +483,30 @@ const allRegisterBeat = async (req, res) => {
   const { userId } = req.params;
 
   try {
-    
     const user = await User.findById(userId);
     if (!user) {
       return res.status(400).json({ message: "User not found" });
     }
 
-    
     const beats = await Beat.find({ userId });
 
-    // Check if the user has any beats
-    if (beats.length === 0) {
-      return res.status(404).json({ message: "No beats found for this user" });
+    const transactions = await Transection.find({ userId });
+
+    if (beats.length === 0 && transactions.length === 0) {
+      return res
+        .status(404)
+        .json({ message: "No beats or transactions found for this user" });
     }
 
-    // Return the beats
-    return res.status(200).json(beats);
+    return res.status(200).json({
+      beats,
+      transactions,
+    });
   } catch (error) {
     console.error(error);
     return res.status(500).json({ message: "Server error" });
   }
 };
-
 
 module.exports = {
   checkAuthStatus,
@@ -519,6 +520,6 @@ module.exports = {
   resendOtp,
   registerUser,
   getAllUsers,
-  userAlltotalCredit, 
-  allRegisterBeat
+  userAlltotalCredit,
+  allRegisterBeat,
 };

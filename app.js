@@ -10,11 +10,12 @@ const beatRoute = require("./modules/beat/beat.route");
 const stripeRoute = require("./modules/payment/stripe.routes");
 const UserDashboard = require("./modules/userDashboard/userDashboard.route");
 const User = require("./modules/users/users.models");
-ExtraCredit = require("./modules/creditpayment/creditpayment.route");
-AdminRouter = require("./modules/adminDashboard/adminDashboard.route");
+const ExtraCredit = require("./modules/creditpayment/creditpayment.route");
+const AdminRouter = require("./modules/adminDashboard/adminDashboard.route");
 const nodemailer = require("nodemailer");
 const Subscription = require("./modules/payment/stripe.model");
 const Transection = require("./modules/TotalCalculation/calculation.model");
+const support = require("./modules/supports/support.route")
 
 const stripe = require("stripe")( process.env.STRIPE_SECRET_KEY);
 
@@ -62,6 +63,7 @@ app.use("/api/payments", stripeRoute);
 app.use("/api/credit", ExtraCredit);
 app.use("/api/dashboard", UserDashboard);
 app.use("/api/admin", AdminRouter);
+app.use("/api/support", support)
 
 app.get("/success", async (req, res) => {
   const sessionId = req.query.session_id;
