@@ -2,6 +2,7 @@ require("dotenv").config();
 const Beat = require("./beat.model");
 const User = require("../users/users.models");
 const nodemailer = require("nodemailer");
+var registerId = 0;
 
 // exports.createBeat = async (req, res) => {
 //   const {userId} = req.params;
@@ -187,6 +188,7 @@ exports.createBeat = async (req, res) => {
     }
 
     // Create new beat
+    registerId++;
     const newBeat = await Beat.create({
       beatName,
       bpm,
@@ -203,6 +205,7 @@ exports.createBeat = async (req, res) => {
       register,
       audioPath: audioFile.path,
       imagePath: imageFile.path,
+      registrasionId : "REG" + registerId,
     });
 
     // Respond with the new beat
