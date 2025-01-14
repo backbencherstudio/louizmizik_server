@@ -2,7 +2,6 @@ require("dotenv").config();
 const nodemailer = require("nodemailer");
 const stripe = require("stripe")(process.env.STRIPE_SECRET_KEY);
 const express = require("express");
-const router = express.Router();
 const Subscription = require("./stripe.model");
 const User = require("../users/users.models");
 const Transection = require("../TotalCalculation/calculation.model");
