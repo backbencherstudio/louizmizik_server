@@ -1,5 +1,15 @@
 const nodemailer = require("nodemailer");
-const { emailForgotPasswordOTP, emailMessage, emailUpdateOTP, resendRegistrationOTPEmail, sendCreditsAddedEmail, sendNewSubscriptionEmail, SubscriptionCanceledEmail,} = require("../constants/email_message");
+const {
+  emailForgotPasswordOTP,
+  emailMessage,
+  emailUpdateOTP,
+  resendRegistrationOTPEmail,
+  sendCreditsAddedEmail,
+  sendNewSubscriptionEmail,
+  SubscriptionCanceledEmail,
+  KeyEventNotificationEmail,
+  KeyEventFailedNotificationEmail
+} = require("../constants/email_message");
 require("dotenv").config();
 
 // const generateOTP = () => {
@@ -32,38 +42,74 @@ const sendEmail = async (to, subject, htmlContent) => {
 
 // Different email templates can be passed here
 const sendRegistrationOTPEmail = async (userName, email, otp) => {
-  await sendEmail(email, "Your OTP Code for SocialApp", emailMessage(userName, email, otp));
+  await sendEmail(
+    email,
+    "Your OTP Code for SocialApp",
+    emailMessage(userName, email, otp)
+  );
 };
 
 const sendUpdateEmailOTP = async (userName, email, otp) => {
-  await sendEmail(email, "Your OTP Code for SocialApp", emailUpdateOTP(userName, email, otp));
+  await sendEmail(
+    email,
+    "Your OTP Code for SocialApp",
+    emailUpdateOTP(userName, email, otp)
+  );
 };
 
 const sendForgotPasswordOTP = async (userName, email, otp) => {
-  await sendEmail(email, "Your OTP Code for SocialApp", emailForgotPasswordOTP(userName, email, otp));
+  await sendEmail(
+    email,
+    "Your OTP Code for SocialApp",
+    emailForgotPasswordOTP(userName, email, otp)
+  );
 };
 
 const resendRegistrationOTP = async (userName, email, otp) => {
-  await sendEmail(email, "Your OTP Code for SocialApp", resendRegistrationOTPEmail(userName, email, otp));
+  await sendEmail(
+    email,
+    "Your OTP Code for SocialApp",
+    resendRegistrationOTPEmail(userName, email, otp)
+  );
 };
-
 
 // -----------------------------------------------------------------------------------------------------------------------------
 
-
-
-const sendExtraCreditEmail = async (userName,email, creditBalance ) =>{
-  await sendEmail(email, "Add Extra Credit", sendCreditsAddedEmail(userName, email, creditBalance));
-
-}
-const sendSubscriptionEmail = async (userName, email, creditBalance ) =>{
-  await sendEmail(email, "Subscription Add", sendNewSubscriptionEmail(userName, email, creditBalance));
-
-}
-const sendSubscriptioncancelEmail = async (userName, email) =>{
-  await sendEmail(email, "Subscription Canceled", SubscriptionCanceledEmail(userName, email));
-
-}
+const sendExtraCreditEmail = async (userName, email, creditBalance) => {
+  await sendEmail(
+    email,
+    "Add Extra Credit",
+    sendCreditsAddedEmail(userName, email, creditBalance)
+  );
+};
+const sendSubscriptionEmail = async (userName, email, creditBalance) => {
+  await sendEmail(
+    email,
+    "Subscription Add",
+    sendNewSubscriptionEmail(userName, email, creditBalance)
+  );
+};
+const sendSubscriptioncancelEmail = async (userName, email) => {
+  await sendEmail(
+    email,
+    "Subscription Canceled",
+    SubscriptionCanceledEmail(userName, email)
+  );
+};
+const sendBeatSucceslEmail = async (userName, email) => {
+  await sendEmail(
+    email,
+    "New Music Beat Registrasion",
+    KeyEventNotificationEmail(userName, email)
+  );
+};
+const sendBeatFailEmail = async (userName, email) => {
+  await sendEmail(
+    email,
+    "New Music Beat Registrasion Failed!!",
+    KeyEventFailedNotificationEmail(userName, email)
+  );
+};
 
 module.exports = {
   generateOTP,
@@ -74,5 +120,7 @@ module.exports = {
   resendRegistrationOTP,
   sendExtraCreditEmail,
   sendSubscriptionEmail,
-  sendSubscriptioncancelEmail
+  sendSubscriptioncancelEmail,
+  sendBeatSucceslEmail,
+  sendBeatFailEmail
 };

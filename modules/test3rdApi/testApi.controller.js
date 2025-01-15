@@ -8,6 +8,7 @@ exports.testApi = async (req, res) => {
     const privateKey = process.env.PRIVATE_KEY; 
     const sharedKey = process.env.SHAREDKEY; 
     const component = "authkey.create";
+    console.log(privateKey, sharedKey)
 
     // Step 1: Get the current UTC time in milliseconds
     const ztime = Date.now();  // This will give time in milliseconds since the Unix epoch (January 1, 1970)
