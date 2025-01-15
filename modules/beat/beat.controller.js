@@ -2,6 +2,7 @@ require("dotenv").config();
 const Beat = require("./beat.model");
 const User = require("../users/users.models");
 const nodemailer = require("nodemailer");
+const { sendBeatSucceslEmail, sendBeatFailEmail } = require("../../util/otpUtils");
 var registerId = 0;
 
 // exports.createBeat = async (req, res) => {
@@ -76,8 +77,8 @@ exports.createBeat = async (req, res) => {
     }
 
     // Log incoming data for debugging
-    console.log("Request Body:", req.body);
-    console.log("Uploaded Files:", req.files);
+    //console.log("Request Body:", req.body);
+    //console.log("Uploaded Files:", req.files);
 
     // Destructure fields from the request body
     const {
@@ -118,65 +119,68 @@ exports.createBeat = async (req, res) => {
           await user.save();
 
           // here wil be add mail service for user---------------------------------------------------
-          const transporter = nodemailer.createTransport({
-            host: "smtp.gmail.com",
-            port: 587,
-            secure: false,
-            auth: {
-              user: process.env.node_mailer_user,
-              pass: process.env.NODE_MAILER_PASSWORD,
-            },
-          });
 
-          const mailOptions = {
-            from: '"LuiZ Music" <LuizMusic-email@example.com>',
-            to: user.email, // User's email
-            subject: "Stay Updated with Key Event Notifications!",
-            text: `Hi ${user.name},\n\nYou will now receive email notifications for key events, including successfully registering new beats. Stay informed and never miss an important update!\n\nThank you for using our service.\n\nBest regards,\nYour App Team`,
-            html: `<p>Hi ${user.name},</p>
-       <p>You will now receive <strong>email notifications</strong> for key events, including successfully registering new beats. Stay informed and never miss an important update!</p>
-       <p>Thank you for using our service.</p>
-       <p>Best regards,<br>Luiz Music</p>`,
-          };
+          sendBeatSucceslEmail(user.name, user.email);
+      //     const transporter = nodemailer.createTransport({
+      //       host: "smtp.gmail.com",
+      //       port: 587,
+      //       secure: false,
+      //       auth: {
+      //         user: process.env.node_mailer_user,
+      //         pass: process.env.NODE_MAILER_PASSWORD,
+      //       },
+      //     });
 
-          transporter.sendMail(mailOptions, (error, info) => {
-            if (error) {
-              console.error("Error sending email:", error);
-            } else {
-              console.log("Email sent:", info.response);
-            }
-          });
+      //     const mailOptions = {
+      //       from: '"LuiZ Music" <LuizMusic-email@example.com>',
+      //       to: user.email, // User's email
+      //       subject: "Stay Updated with Key Event Notifications!",
+      //       text: `Hi ${user.name},\n\nYou will now receive email notifications for key events, including successfully registering new beats. Stay informed and never miss an important update!\n\nThank you for using our service.\n\nBest regards,\nYour App Team`,
+      //       html: `<p>Hi ${user.name},</p>
+      //  <p>You will now receive <strong>email notifications</strong> for key events, including successfully registering new beats. Stay informed and never miss an important update!</p>
+      //  <p>Thank you for using our service.</p>
+      //  <p>Best regards,<br>Luiz Music</p>`,
+      //     };
+
+      //     transporter.sendMail(mailOptions, (error, info) => {
+      //       if (error) {
+      //         console.error("Error sending email:", error);
+      //       } else {
+      //         console.log("Email sent:", info.response);
+      //       }
+      //     });
         } else {
           // here also failer msg email service add for user---------------------------------
+          sendBeatFailEmail(user.name, user.email);
 
-          const transporter = nodemailer.createTransport({
-            host: "smtp.gmail.com",
-            port: 587,
-            secure: false,
-            auth: {
-              user: process.env.node_mailer_user,
-              pass: process.env.NODE_MAILER_PASSWORD,
-            },
-          });
+      //     const transporter = nodemailer.createTransport({
+      //       host: "smtp.gmail.com",
+      //       port: 587,
+      //       secure: false,
+      //       auth: {
+      //         user: process.env.node_mailer_user,
+      //         pass: process.env.NODE_MAILER_PASSWORD,
+      //       },
+      //     });
 
-          const mailOptions = {
-            from: '"LuiZ Music" <LuizMusic-email@example.com>',
-            to: user.email, // User's email
-            subject: "Stay Updated with Key Event Notifications!",
-            text: `Hi ${user.name},\n\nYou will now receive email notifications for key events, including faiiillleeedddd!!!! registering new beats. Stay informed and never miss an important update!\n\nThank you for using our service.\n\nBest regards,\nYour App Team`,
-            html: `<p>Hi ${user.name},</p>
-       <p>You will now receive <strong>email notifications</strong> for key events,including faiiillleeedddd!!!!  registering new beats. Stay informed and never miss an important update!</p>
-       <p>Thank you for using our service.</p>
-       <p>Best regards,<br>Your App Team</p>`,
-          };
+      //     const mailOptions = {
+      //       from: '"LuiZ Music" <LuizMusic-email@example.com>',
+      //       to: user.email, // User's email
+      //       subject: "Stay Updated with Key Event Notifications!",
+      //       text: `Hi ${user.name},\n\nYou will now receive email notifications for key events, including faiiillleeedddd!!!! registering new beats. Stay informed and never miss an important update!\n\nThank you for using our service.\n\nBest regards,\nYour App Team`,
+      //       html: `<p>Hi ${user.name},</p>
+      //  <p>You will now receive <strong>email notifications</strong> for key events,including faiiillleeedddd!!!!  registering new beats. Stay informed and never miss an important update!</p>
+      //  <p>Thank you for using our service.</p>
+      //  <p>Best regards,<br>Your App Team</p>`,
+      //     };
 
-          transporter.sendMail(mailOptions, (error, info) => {
-            if (error) {
-              console.error("Error sending email:", error);
-            } else {
-              console.log("Email sent:", info.response);
-            }
-          });
+      //     transporter.sendMail(mailOptions, (error, info) => {
+      //       if (error) {
+      //         console.error("Error sending email:", error);
+      //       } else {
+      //         console.log("Email sent:", info.response);
+      //       }
+      //     });
         }
       } catch (certError) {
         console.error("Error during certification:", certError);

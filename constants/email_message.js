@@ -162,3 +162,46 @@ export const SubscriptionCanceledEmail = (userName, email) => {
     </div>
   `;
 };
+
+
+
+
+export const KeyEventNotificationEmail = (userName, email) => {
+  return `
+    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: auto; padding: 20px; border: 1px solid #ddd; border-radius: 10px; box-shadow: 0 4px 8px rgba(0,0,0,0.1);">
+      <div style="text-align: center; margin-bottom: 20px;">
+        <img src="https://via.placeholder.com/150x50?text=Luiz+Music" alt="Luiz Music Logo" style="max-width: 100%; height: auto;">
+      </div>
+      <h2 style="color: #007bff;">Stay Updated with Key Event Notifications!</h2>
+      <p style="color: #333; font-size: 18px;">Hi ${userName},</p>
+      <p style="color: #333; font-size: 16px;">You will now receive <strong>email notifications</strong> for key events, including successfully registering new beats. Stay informed and never miss an important update!</p>
+      <p style="color: #333; font-size: 16px;">Thank you for using our service.</p>
+      <p style="color: #333; font-size: 16px;">Best regards,</p>
+      <p style="color: #333; font-size: 16px;">The Luiz Music Team</p>
+      <hr style="border: none; border-top: 1px solid #ddd; margin: 20px 0;">
+      <p style="color: #777; font-size: 12px; text-align: center;">This email was sent to ${email}. If you have any questions or need assistance, please contact our support team.</p>
+    </div>
+  `;
+};
+
+
+
+export const KeyEventFailedNotificationEmail = (userName, email) => {
+  return `
+    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: auto; padding: 20px; border: 1px solid #ddd; border-radius: 10px; box-shadow: 0 4px 8px rgba(0,0,0,0.1);">
+      <div style="text-align: center; margin-bottom: 20px;">
+        <img src="https://via.placeholder.com/150x50?text=Luiz+Music" alt="Luiz Music Logo" style="max-width: 100%; height: auto;">
+      </div>
+      <h2 style="color: #dc3545;">Notification: Event Registration Failed</h2>
+      <p style="color: #333; font-size: 18px;">Hi ${userName},</p>
+      <p style="color: #333; font-size: 16px;">You will now receive <strong>email notifications</strong> for key events, including <span style="color: #dc3545; font-weight: bold;">failed</span> registrations of new beats. Stay informed and never miss an important update!</p>
+      <p style="color: #333; font-size: 16px;">Thank you for using our service.</p>
+      <p style="color: #333; font-size: 16px;">Best regards,</p>
+      <p style="color: #333; font-size: 16px;">The Luiz Music Team</p>
+      <hr style="border: none; border-top: 1px solid #ddd; margin: 20px 0;">
+      <p style="color: #777; font-size: 12px; text-align: center;">This email was sent to ${email}. If you have any questions or need assistance, please contact our support team.</p>
+    </div>
+  `;
+};
+
+
