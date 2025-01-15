@@ -1,5 +1,5 @@
 const nodemailer = require("nodemailer");
-const { emailForgotPasswordOTP, emailMessage, emailUpdateOTP, resendRegistrationOTPEmail } = require("../constants/email_message");
+const { emailForgotPasswordOTP, emailMessage, emailUpdateOTP, resendRegistrationOTPEmail, sendCreditsAddedEmail, sendNewSubscriptionEmail, SubscriptionCanceledEmail,} = require("../constants/email_message");
 require("dotenv").config();
 
 // const generateOTP = () => {
@@ -47,6 +47,24 @@ const resendRegistrationOTP = async (userName, email, otp) => {
   await sendEmail(email, "Your OTP Code for SocialApp", resendRegistrationOTPEmail(userName, email, otp));
 };
 
+
+// -----------------------------------------------------------------------------------------------------------------------------
+
+
+
+const sendExtraCreditEmail = async (userName,email, creditBalance ) =>{
+  await sendEmail(email, "Add Extra Credit", sendCreditsAddedEmail(userName, email, creditBalance));
+
+}
+const sendSubscriptionEmail = async (userName, email, creditBalance ) =>{
+  await sendEmail(email, "Subscription Add", sendNewSubscriptionEmail(userName, email, creditBalance));
+
+}
+const sendSubscriptioncancelEmail = async (userName, email) =>{
+  await sendEmail(email, "Subscription Canceled", SubscriptionCanceledEmail(userName, email));
+
+}
+
 module.exports = {
   generateOTP,
   sendEmail,
@@ -54,4 +72,7 @@ module.exports = {
   sendUpdateEmailOTP,
   sendForgotPasswordOTP,
   resendRegistrationOTP,
+  sendExtraCreditEmail,
+  sendSubscriptionEmail,
+  sendSubscriptioncancelEmail
 };

@@ -5,6 +5,7 @@ const express = require("express");
 const Subscription = require("./stripe.model");
 const User = require("../users/users.models");
 const Transection = require("../TotalCalculation/calculation.model");
+const { sendSubscriptioncancelEmail } = require("../../util/otpUtils");
 
 exports.createCustomer = async (req, res) => {
   const { email, paymentMethodId } = req.body;
@@ -194,6 +195,7 @@ exports.cancelSubscription = async (req, res) => {
   try {
     // Find the user
     const user = await User.findById(userId);
+    console.log("user" , user)
     if (!user) {
       return res.status(404).json({ message: "User not found" });
     }
@@ -205,6 +207,7 @@ exports.cancelSubscription = async (req, res) => {
     if (!subscription) {
       return res.status(404).json({ message: "Subscription not found" });
     }
+    console.log(subscription, "5000000")
 
     // Cancel the subscription in Stripe
     const canceledSubscription = await stripe.subscriptions.cancel(
@@ -218,40 +221,40 @@ exports.cancelSubscription = async (req, res) => {
     await user.save();
     await subscription.save();
 
-
+    sendSubscriptioncancelEmail(user?.name, user?.email)
     // Send a confirmation email to the user
-    const mailOptions = {
-      from: process.env.EMAIL_USER,  // Sender address
-      to: user.email,                // Receiver address (User's email)
-      subject: 'Subscription Canceled', // Subject of the email
-      text: `Dear ${user.name},\n\nYour subscription has been successfully canceled.\n\nThank you for being with us!\n\nBest regards,\nLuiz Music`, // Body of the email
-    };
+  //   const mailOptions = {
+  //     from: process.env.EMAIL_USER,  // Sender address
+  //     to: user.email,                // Receiver address (User's email)
+  //     subject: 'Subscription Canceled', // Subject of the email
+  //     text: `Dear ${user.name},\n\nYour subscription has been successfully canceled.\n\nThank you for being with us!\n\nBest regards,\nLuiz Music`, // Body of the email
+  //   };
 
-    // Send the email
-    await transporter.sendMail(mailOptions);
+  //   // Send the email
+  //   await transporter.sendMail(mailOptions);
 
-    // Respond with success
-    return res.status(200).json({
-      message: "Subscription canceled successfully",
-      subscription: canceledSubscription,
-    });
+  //   // Respond with success
+  //   return res.status(200).json({
+  //     message: "Subscription canceled successfully",
+  //     subscription: canceledSubscription,
+  //   });
   } catch (error) {
     console.error("Error canceling subscription:", error);
     return res
       .status(500)
       .json({ message: "Failed to cancel subscription", error: error.message });
-  }
+   }
 };
 
 
 
-// Create a transporter for Nodemailer to send email
-const transporter = nodemailer.createTransport({
-  host: "smtp.gmail.com",
-          port: 587,
-          secure: false,
-          auth: {
-            user: process.env.node_mailer_user,
-            pass: process.env.NODE_MAILER_PASSWORD,
-          },
-});
+// // Create a transporter for Nodemailer to send email
+// const transporter = nodemailer.createTransport({
+//   host: "smtp.gmail.com",
+//           port: 587,
+//           secure: false,
+//           auth: {
+//             user: process.env.node_mailer_user,
+//             pass: process.env.NODE_MAILER_PASSWORD,
+//           },
+// });
