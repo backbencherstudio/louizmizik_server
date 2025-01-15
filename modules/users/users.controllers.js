@@ -479,7 +479,7 @@ const userAlltotalCredit = async (req, res) => {
   }
 };
 
-const allRegisterBeat = async (req, res) => {
+const allRegisterBeatandTransections = async (req, res) => {
   const { userId } = req.params;
 
   try {
@@ -508,6 +508,8 @@ const allRegisterBeat = async (req, res) => {
   }
 };
 
+
+
 module.exports = {
   checkAuthStatus,
   logout,
@@ -521,5 +523,6 @@ module.exports = {
   registerUser,
   getAllUsers,
   userAlltotalCredit,
-  allRegisterBeat,
+  allRegisterBeatandTransections,
+
 };
