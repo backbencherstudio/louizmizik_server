@@ -34,6 +34,12 @@ exports.testApi = async (req, res) => {
       .update(dataStream, "utf8")
       .digest("hex");
 
+
+
+//       http://api.safecreative.org/v2/
+// ?ztime=20081106141840
+// &sharedkey=fDsm8YO9SaupC5TChOsB6w
+// &component=authkey.create
     // Step 5: Construct final request URL
     const apiUrl = `http://api.safecreative.org/v2/`;
     const finalUrl = `${apiUrl}?${sortedParams}&signature=${signature}`;

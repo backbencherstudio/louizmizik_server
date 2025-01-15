@@ -11,7 +11,8 @@ const {
   resendOtp,
   logout,
   userAlltotalCredit,
-  allRegisterBeat
+  allRegisterBeatandTransections,
+
 } = require("./users.controllers");
 const { verifyUser } = require("../../middleware/verifyUser");
 const upload = require("../../middleware/multer.config.single");
@@ -34,6 +35,7 @@ route.post("/match-password-otp", verifyUser, matchForgotPasswordOTP);
 route.patch("/reset-forgot-password", verifyUser, resetPasssword);
 
 route.get("/userAlltotalCredit/:userId", userAlltotalCredit)
-route.get("/allRegisterBeat/:userId", allRegisterBeat)
+route.get("/allRegisterBeatandTransections/:userId", allRegisterBeatandTransections)
+
 
 module.exports = route;
