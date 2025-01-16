@@ -1,7 +1,6 @@
 require("dotenv").config();
 const Beat = require("./beat.model");
 const User = require("../users/users.models");
-const nodemailer = require("nodemailer");
 const { sendBeatSucceslEmail, sendBeatFailEmail } = require("../../util/otpUtils");
 var registerId = 0;
 
@@ -228,13 +227,24 @@ exports.createBeat = async (req, res) => {
 exports.OneUsergetBeats = async (req, res) => {
   try {
     const beats = await Beat.find({ userId: req.params.userId });
-    res.status(200).json({ beats });
+    return res.status(200).json({ beats });
   } catch (error) {
     console.error(error);
-    res.status(500).json({ message: "Error fetching beats", error });
+    return res.status(500).json({ message: "Error fetching beats", error });
   }
 };
 
 const certification = async (audio) => {
   return false;
 };
+
+exports.deleteBeat = async(req, res) =>{
+  const deletedBeat = await Beat.deleteOne({ _id: req.params.id });
+if (deletedBeat.deletedCount > 0) {
+   return res.status(200).json('Beat deleted successfully.');
+} else {
+  
+  return res.status(500).json({ message: "No beat found with the specified ID.", error });
+}
+
+}
