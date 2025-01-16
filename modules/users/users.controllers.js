@@ -8,6 +8,10 @@ const User = require("./users.models");
 const Transection = require("../TotalCalculation/calculation.model");
 const Beat = require("../beat/beat.model");
 
+const fs = require("fs");
+const path = require("path");
+const { fileURLToPath } = require("url");
+
 const {
   generateOTP,
   sendUpdateEmailOTP,
@@ -274,10 +278,15 @@ const authenticateUser = async (req, res) => {
 // Edit user profile
 const editUserProfile = async (req, res) => {
   try {
-    console.log(req.body);
-    const imageUrl = `${req.file.filename}`;
-    if (imageUrl) {
+    const user = await User.findById(req.params.userId)
+    if(!user){
+      return res.status(400).json({ message: "User not found" });
+    }
+    const imageUrl = `${req?.file?.filename}` || "";
+
+    if (req.file !== undefined) {
       req.body.avatar = imageUrl;
+      deleteImage(user.avatar)
     }
     if (!req.params.userId) {
       return res.status(400).json({ message: "Unauthorized user" });
@@ -508,7 +517,7 @@ const allRegisterBeatandTransections = async (req, res) => {
   }
 };
 
-const OneUser = async(req, res) =>{
+const OneUser = async (req, res) => {
   const { userId } = req.params;
   try {
     const user = await User.findById(userId);
@@ -517,15 +526,35 @@ const OneUser = async(req, res) =>{
     }
 
     return res.status(200).json({
-      user
+      user,
     });
   } catch (error) {
     console.error(error);
     return res.status(500).json({ message: "Server error" });
   }
+};
 
+
+
+
+function deleteImage(imagePath) {
+  const uploadsFolder = path.resolve(__dirname, "..", "..", "uploads/images");
+  const filePath = path.join(uploadsFolder, imagePath);
+
+  fs.access(filePath, fs.constants.F_OK, (err) => {
+    if (err) {
+      console.error("File does not exist:", err);
+      return;
+    }
+    fs.unlink(filePath, (err) => {
+      if (err) {
+        console.error("Error deleting the file:", err);
+        return;
+      }
+      console.log("File deleted successfully");
+    });
+  });
 }
-
 
 module.exports = {
   checkAuthStatus,
@@ -541,5 +570,5 @@ module.exports = {
   getAllUsers,
   userAlltotalCredit,
   allRegisterBeatandTransections,
-  OneUser
+  OneUser,
 };
