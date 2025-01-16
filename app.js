@@ -15,11 +15,13 @@ const AdminRouter = require("./modules/adminDashboard/adminDashboard.route");
 const nodemailer = require("nodemailer");
 const Subscription = require("./modules/payment/stripe.model");
 const Transection = require("./modules/TotalCalculation/calculation.model");
-const support = require("./modules/supports/support.route")
+const support = require("./modules/supports/support.route");
+const testApiRoute = require("./modules/test3rdApi/testApi.route");
 
-const stripe = require("stripe")( process.env.STRIPE_SECRET_KEY);
+const stripe = require("stripe")(process.env.STRIPE_SECRET_KEY);
 
 const path = require("path");
+const { sendExtraCreditEmail , sendSubscriptionEmail} = require("./util/otpUtils");
 
 const app = express();
 
@@ -63,7 +65,9 @@ app.use("/api/payments", stripeRoute);
 app.use("/api/credit", ExtraCredit);
 app.use("/api/dashboard", UserDashboard);
 app.use("/api/admin", AdminRouter);
-app.use("/api/support", support)
+app.use("/api/support", support);
+// optional----------------------
+app.use("/api/safeApi", testApiRoute);
 
 app.get("/success", async (req, res) => {
   const sessionId = req.query.session_id;
@@ -116,48 +120,51 @@ app.post(
 
       const userId = session.metadata.userId;
       const user = await User.findById(userId);
-      console.log("User:", user);
+      //console.log("User:", user);
 
       if (user) {
         user.credit += 10;
         const newTransaction = new Transection({
           credit: 10,
           userId: user._id,
+          userNAme: user.name,
+          userEmail: user.email,
           customerId: user.customerId,
           method: "extracredit",
           amount: 5,
         });
         await newTransaction.save();
         await user.save();
+        sendExtraCreditEmail(user?.name, user?.email ,  user?.credit)
 
-        const transporter = nodemailer.createTransport({
-          host: "smtp.gmail.com",
-          port: 587,
-          secure: false,
-          auth: {
-            user: process.env.node_mailer_user,
-            pass: process.env.NODE_MAILER_PASSWORD,
-          },
-        });
+        // const transporter = nodemailer.createTransport({
+        //   host: "smtp.gmail.com",
+        //   port: 587,
+        //   secure: false,
+        //   auth: {
+        //     user: process.env.node_mailer_user,
+        //     pass: process.env.NODE_MAILER_PASSWORD,
+        //   },
+        // });
 
-        const mailOptions = {
-          from: '"LuiZ Music" <your-smtp-email@example.com>',
-          to: user.email, // User's email
-          subject: "Credits Added to Your Account",
-          text: `Hi ${user.name},\n\nYou have been awarded 10 additional credits! Your new credit balance is ${user.credit}.\n\nThank you for using our service!\n\nBest regards,\nLuiz Music`,
-          html: `<p>Hi ${user.name},</p>
-               <p>You have been awarded <strong>10 additional credits</strong>! Your new credit balance is <strong>${user.credit}</strong>.</p>
-               <p>Thank you for using our service!</p>
-               <p>Best regards,<br>Luiz Music Team</p>`,
-        };
+        // const mailOptions = {
+        //   from: '"LuiZ Music" <your-smtp-email@example.com>',
+        //   to: user.email, // User's email
+        //   subject: "Credits Added to Your Account",
+        //   text: `Hi ${user.name},\n\nYou have been awarded 10 additional credits! Your new credit balance is ${user.credit}.\n\nThank you for using our service!\n\nBest regards,\nLuiz Music`,
+        //   html: `<p>Hi ${user.name},</p>
+        //        <p>You have been awarded <strong>10 additional credits</strong>! Your new credit balance is <strong>${user.credit}</strong>.</p>
+        //        <p>Thank you for using our service!</p>
+        //        <p>Best regards,<br>Luiz Music Team</p>`,
+        // };
 
-        transporter.sendMail(mailOptions, (error, info) => {
-          if (error) {
-            console.error("Error sending email:", error);
-          } else {
-            console.log("Email sent:", info.response);
-          }
-        });
+        // transporter.sendMail(mailOptions, (error, info) => {
+        //   if (error) {
+        //     console.error("Error sending email:", error);
+        //   } else {
+        //     console.log("Email sent:", info.response);
+        //   }
+        // });
       }
     }
 
@@ -214,6 +221,8 @@ app.post(
       const newSubscription = new Subscription({
         customerId,
         userId: user._id,
+        userNAme: user.name,
+        userEmail: user.email,
         subscriptionId: subscriptionId,
         status: "active",
         startDate: new Date(),
@@ -225,46 +234,46 @@ app.post(
       //console.log(user);
       if (user) {
         user.credit = (user.credit || 0) + 20;
-        user.active= true;
+        user.active = true;
 
         const newTransaction = new Transection({
           credit: 20,
           userId: user._id,
           customerId: customerId,
           method: "subscription",
-          amount: 10,
+          amount: 9.99,
         });
 
         await newTransaction.save();
         await user.save();
+        sendSubscriptionEmail(user?.name, user?.email ,  user?.credit)
+        // const transporter = nodemailer.createTransport({
+        //   host: "smtp.gmail.com",
+        //   port: 587,
+        //   secure: false,
+        //   auth: {
+        //     user: process.env.node_mailer_user,
+        //     pass: process.env.NODE_MAILER_PASSWORD,
+        //   },
+        // });
 
-        const transporter = nodemailer.createTransport({
-          host: "smtp.gmail.com",
-          port: 587,
-          secure: false,
-          auth: {
-            user: process.env.node_mailer_user,
-            pass: process.env.NODE_MAILER_PASSWORD,
-          },
-        });
+        // const mailOptions = {
+        //   from: '"Luiz Music" <your_email@example.com>', // Sender address
+        //   to: user.email, // User's email address
+        //   subject: "New Subscription Added",
+        //   text: `Hi ${user.name},\n\nA new subscription has been added to your account. Your current credit balance is now ${user.credit}.\n\nThank you for choosing our service!\n\nBest regards,\nYour Company Name`,
+        //   html: `<p>Hi ${user.name},</p>
+        //        <p>A new subscription has been added to your account. Your current credit balance is now <strong>${user.credit}</strong>.</p>
+        //        <p>Thank you for choosing our service!</p>
+        //        <p>Best regards,<br>Luiz Music</p>`,
+        // };
 
-        const mailOptions = {
-          from: '"Luiz Music" <your_email@example.com>', // Sender address
-          to: user.email, // User's email address
-          subject: "New Subscription Added",
-          text: `Hi ${user.name},\n\nA new subscription has been added to your account. Your current credit balance is now ${user.credit}.\n\nThank you for choosing our service!\n\nBest regards,\nYour Company Name`,
-          html: `<p>Hi ${user.name},</p>
-               <p>A new subscription has been added to your account. Your current credit balance is now <strong>${user.credit}</strong>.</p>
-               <p>Thank you for choosing our service!</p>
-               <p>Best regards,<br>Luiz Music</p>`,
-        };
-
-        try {
-          await transporter.sendMail(mailOptions);
-          console.log("Email sent successfully!");
-        } catch (error) {
-          console.error("Error sending email:", error);
-        }
+        // try {
+        //   await transporter.sendMail(mailOptions);
+        //   console.log("Email sent successfully!");
+        // } catch (error) {
+        //   console.error("Error sending email:", error);
+        // }
       }
       // ----------------------------------------------------end----------------------------
     }

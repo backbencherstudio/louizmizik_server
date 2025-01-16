@@ -373,8 +373,7 @@ exports.AllTransections = async (req, res) => {
     const page = parseInt(req.query.page) || 1; // Default page is 1
 
     // Fetch transactions with pagination
-    const transactions = await Transection.find()
-      .populate("userId", "name email") // Populate user details (adjust fields as necessary)
+    const transactions = await Transection.find() // Populate user details (adjust fields as necessary)
       .sort({ createdAt: -1 }) // Sort by latest transactions
       .skip((page - 1) * limit) // Skip documents for pagination
       .limit(limit); // Limit the number of documents
