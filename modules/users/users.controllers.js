@@ -283,11 +283,11 @@ const editUserProfile = async (req, res) => {
       return res.status(400).json({ message: "Unauthorized user" });
     }
     if (req.body.newpassword) {
-      if (req.body.newpassword === req.body.confirmPassword) {
+      if (req.body.newpassword !== req.body.confirmPassword) {
         res.status(400).json({ message: "Password not matched" });
         return;
       }
-      req.body.password = await hashPassword(req.body.password);
+      req.body.password = await hashPassword(req.body.newpassword);
     }
 
     const updatedUser = await User.findByIdAndUpdate(
