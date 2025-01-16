@@ -508,6 +508,23 @@ const allRegisterBeatandTransections = async (req, res) => {
   }
 };
 
+const OneUser = async(req, res) =>{
+  const { userId } = req.params;
+  try {
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(400).json({ message: "User not found" });
+    }
+
+    return res.status(200).json({
+      user
+    });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ message: "Server error" });
+  }
+
+}
 
 
 module.exports = {
@@ -524,5 +541,5 @@ module.exports = {
   getAllUsers,
   userAlltotalCredit,
   allRegisterBeatandTransections,
-
+  OneUser
 };
