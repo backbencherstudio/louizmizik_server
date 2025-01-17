@@ -1,20 +1,23 @@
-const crypto = require('crypto');
-const axios = require('axios');
+const crypto = require("crypto");
+const axios = require("axios");
 require("dotenv").config();
-
+const xml2js = require("xml2js");
 exports.testApi = async (req, res) => {
+  //---------------------------------------------------- Authkey generate start here with private abd shared key-------------------------------------------------------
   const hitTheApi = async () => {
-    // Parameters
-    const privateKey = process.env.PRIVATE_KEY; 
-    const sharedKey = process.env.SHAREDKEY; 
+    const privateKey = process.env.PRIVATE_KEY;
+    const sharedKey = process.env.SHAREDKEY;
     const component = "authkey.create";
-    console.log(privateKey, sharedKey)
 
-    // Step 1: Get the current UTC time in milliseconds
-    const ztime = Date.now();  // This will give time in milliseconds since the Unix epoch (January 1, 1970)
-    console.log("Generated ztime (milliseconds since 1970-01-01 00:00:00 GMT):", ztime);
+    console.log("Private Key:", privateKey);
+    console.log("Shared Key:", sharedKey);
 
-    // Step 2: Sort parameters by key
+    const ztime = Math.floor(Date.now());
+    console.log(
+      "Generated ztime (seconds since 1970-01-01 00:00:00 GMT):",
+      ztime
+    );
+
     const params = {
       component: component,
       sharedkey: sharedKey,
@@ -25,38 +28,106 @@ exports.testApi = async (req, res) => {
       .map((key) => `${key}=${params[key]}`)
       .join("&");
 
-    // Step 3: Create data stream with private key
-    const dataStream = `${privateKey}&${sortedParams}`;
+    console.log("Sorted Parameters:", sortedParams);
 
-    // Step 4: Generate SHA-1 hash of the data stream
+    const dataStream = `${privateKey}&${sortedParams}`;
+    //console.log("Data Stream for SHA-1:", dataStream);
+
     const signature = crypto
       .createHash("sha1")
       .update(dataStream, "utf8")
       .digest("hex");
 
+    //console.log("Generated Signature:", signature);
 
-
-//       http://api.safecreative.org/v2/
-// ?ztime=20081106141840
-// &sharedkey=fDsm8YO9SaupC5TChOsB6w
-// &component=authkey.create
-    // Step 5: Construct final request URL
-    const apiUrl = `http://api.safecreative.org/v2/`;
+    const apiUrl = `http://arena.safecreative.org/v2/`;
     const finalUrl = `${apiUrl}?${sortedParams}&signature=${signature}`;
 
-    console.log("Final URL:", finalUrl);
+    console.log("Final API URL:", finalUrl);
 
-    // Step 6: Make the API request with await
+    // Step 6: Make the API request
     try {
       const response = await axios.get(finalUrl);
       console.log("API Response:", response.data);
-      return response.data;
+
+      //  ---------------------------------------------------------------------------------------------
+      // Parse the XML response
+      const parser = new xml2js.Parser();
+      const result = await parser.parseStringPromise(response.data);
+
+      // Extract authkey and privatekey
+      const authkey = result.authkeycreate.authkey[0];
+      const privatekey = result.authkeycreate.privatekey[0];
+
+      // Store the keys in an object
+      const credentials = { authkey, privatekey };
+      console.log("Parsed Credentials:", credentials);
+      const apiUrl2 = "http://arena.safecreative.org/api-ui/authkey.edit";
+      const level = "GET";
+
+      const authorizationUrl = await getAuthorizationUrl(apiUrl2, sharedKey, level, authkey , privatekey);
+      console.log("Authorization URL:", authorizationUrl);
+      // -----------------------------end-------------------------------------------------
+
+      return authorizationUrl;
+      //return response.data;
     } catch (error) {
-      console.error("Error:", error.response ? error.response.data : error.message);
+      console.error(
+        "API Error:",
+        error.response ? error.response.data : error.message
+      );
       throw error.response ? error.response.data : error.message;
     }
   };
 
+
+  // -------------------------------Get Authorization Url--------------------------------------------
+  async function getAuthorizationUrl(apiUrl, sharedKey, level = "GET", authkey, privatekey) {
+    try {
+      // Step 1: Request to create an authkey
+      //const response = await axios.post(apiUrl);
+      //const parser = new xml2js.Parser();
+      //const result = await parser.parseStringPromise(response.data);
+  
+      // Step 2: Extract authkey and privatekey
+      //const authkey = result.authkeycreate.authkey[0];
+      //const privatekey = result.authkeycreate.privatekey[0];
+  
+      // Save the credentials securely for future use
+      //const credentials = { authkey, privatekey };
+      //console.log("Parsed Credentials:", credentials);
+  
+      // Step 3: Generate ztime and signature
+      const ztime = Date.now().toString();
+      const stringToSign = `authkey=${authkey}&level=${level}&sharedkey=${sharedKey}&ztime=${ztime}`;
+      const signature = crypto
+        .createHmac("sha1", privatekey)
+        .update(stringToSign)
+        .digest("hex");
+  
+      // Step 4: Construct the redirect URL
+      const redirectUrl = `${apiUrl}?authkey=${authkey}&level=${level}&sharedkey=${sharedKey}&ztime=${ztime}&signature=${signature}`;
+  
+      return redirectUrl;
+    } catch (error) {
+      console.error("Error generating authorization URL:", error.message);
+      throw error;
+    }
+  }
+
+
+
+
+
+
+
+
+
+
+
+
+
+  // -----------------------------------Parent Function--------------------------------------------------
   try {
     // Get the API response
     const value = await hitTheApi();
