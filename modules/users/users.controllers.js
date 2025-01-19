@@ -316,18 +316,33 @@ const google = async (req, res, next) => {
     } else {
       const generatePass = Math.random().toString(36).slice(-8);
       const hashpasswoard = bcrypt.hashSync(generatePass, 10);
-      const newUser = new User({
+
+       // Fetch the country based on IP
+    let country = "Unknown"; // Default value in case location fetch fails
+    try {
+      const response = await fetch("http://get.geojs.io/v1/ip/geo.json");
+      if (response.ok) {
+        const data = await response.json();
+        country = data.country || "Unknown";
+      }
+    } catch (error) {
+      console.error("Error fetching IP-based location:", error.message);
+    }
+      const user = new User({
         name: name,
         email: email,
         password: hashpasswoard,
+        country
        
       });
-      await newUser.save();
+      await user.save();
       // remove password from user for frontend sequrity--------------------------------
-      const { password: password, ...rest } = newUser;
+      const { password: password, ...rest } = user;
+
+
       
       const token = sign(
-        { userEmail: newUser.email, userId: newUser._id },
+        { userEmail: user.email, userId: user._id },
         process.env.WEBTOKEN_SECRET_KEY,
         { expiresIn: "1d" }
       )
@@ -339,7 +354,7 @@ const google = async (req, res, next) => {
       res
       .status(200)
       .cookie("token", token, options)
-      .json({ message: "Login successful", newUser, token });
+      .json({ message: "Login successful", user, token });
     }
   } catch (err) {
     return console.log(err);
