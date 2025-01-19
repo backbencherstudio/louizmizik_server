@@ -316,18 +316,18 @@ const google = async (req, res, next) => {
     } else {
       const generatePass = Math.random().toString(36).slice(-8);
       const hashpasswoard = bcrypt.hashSync(generatePass, 10);
-      const newUser = new User({
+      const user = new User({
         name: name,
         email: email,
         password: hashpasswoard,
        
       });
-      await newUser.save();
+      await user.save();
       // remove password from user for frontend sequrity--------------------------------
-      const { password: password, ...rest } = newUser;
+      const { password: password, ...rest } = user;
       
       const token = sign(
-        { userEmail: newUser.email, userId: newUser._id },
+        { userEmail: user.email, userId: user._id },
         process.env.WEBTOKEN_SECRET_KEY,
         { expiresIn: "1d" }
       )
@@ -339,7 +339,7 @@ const google = async (req, res, next) => {
       res
       .status(200)
       .cookie("token", token, options)
-      .json({ message: "Login successful", newUser, token });
+      .json({ message: "Login successful", user, token });
     }
   } catch (err) {
     return console.log(err);
