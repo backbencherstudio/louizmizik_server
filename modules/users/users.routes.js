@@ -12,7 +12,8 @@ const {
   logout,
   userAlltotalCredit,
   allRegisterBeatandTransections,
-  OneUser
+  OneUser,
+  google
 
 } = require("./users.controllers");
 const { verifyUser } = require("../../middleware/verifyUser");
@@ -27,6 +28,7 @@ route.post("/register", registerUser);
 route.post("/verify-otp", verifyOTP);
 route.post("/resendotp", resendOtp);
 route.post("/login", authenticateUser);
+route.post("/google/login", google)
 route.put("/update-profile/:userId", upload,   editUserProfile);
 route.post("/logout", logout);
 
