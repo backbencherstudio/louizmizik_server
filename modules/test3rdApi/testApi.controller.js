@@ -248,13 +248,15 @@ exports.testApi = async (req, res) => {
 // const crypto = require("crypto");
 // const axios = require("axios");
 
+
+
 exports.AuthoRized = async (req, res) => {
   try {
     // Load environment variables
-    const authkey = process.env.AUTH_KEY;  // Ensure this is correct
-    const privateKey = process.env.PRIVATE_AUTH_KEY;  // Use the private key associated with the sharedkey
-    const sharedKey = process.env.SHAREDKEY;  // Your shared key (if needed)
-    const component = "work.upload.lookup";  // Component for lookup
+    const authkey = process.env.AUTH_KEY; // Authorization key
+    const privateKey = process.env.PRIVATE_AUTH_KEY; // Private key
+    const apiUrl = "http://arena.safecreative.org/v2/"; // Base API URL
+    const component = "work.upload.lookup"; // Component
 
     // Extract filename from query parameters
     const { filename } = req.query;
@@ -262,56 +264,38 @@ exports.AuthoRized = async (req, res) => {
       return res.status(400).json({ error: "Filename is required." });
     }
 
-    // Generate ztime in milliseconds (as per the documentation)
+    // Generate ztime (current timestamp in milliseconds)
     const ztime = Date.now();
     console.log("ztime (milliseconds):", ztime);
 
     // Prepare parameters
     const params = {
-      authkey: authkey,  // Authorization key
+      authkey: authkey,
       component: component,
-      filename: filename,  // Filename to upload
-      ztime: ztime,  // Timestamp
+      bypost: true, // Indicates the request is by POST
+      filename: filename,
+      ztime: ztime,
     };
-   
 
     // Sort the parameters alphabetically by key
     const sortedParams = Object.keys(params)
       .sort()
-      .map((key) => `${key}=${encodeURIComponent(params[key])}`)  // Ensure proper encoding
+      .map((key) => `${key}=${encodeURIComponent(params[key])}`)
       .join("&");
     console.log("Sorted Parameters:", sortedParams);
 
-    // Create the data stream for signature generation (prepend private key)
+    // Create the data stream for signature generation
     const dataStream = `${privateKey}&${sortedParams}`;
     console.log("Data Stream for Signature:", dataStream);
 
     // Generate the SHA-1 signature from the data stream
-
-    // const Sparams = {
-    //   authkey: authkey,  // Authorization key
-    //   component: component,
-    //   sharedkey: sharedKey,
-    //   ztime: ztime,  // Timestamp
-    // };
-
-    // const SsortedParams = Object.keys(Sparams)
-    //   .sort()
-    //   .map((key) => `${key}=${encodeURIComponent(Sparams[key])}`)  // Ensure proper encoding
-    //   .join("&");
-    // console.log("Sorted Parameters:", SsortedParams);
-
-    // const SdataStream = `${privateKey}&${SsortedParams}`;
-    // console.log("Data Stream for Signature:", SdataStream);
-
     const signature = crypto
       .createHash("sha1")
       .update(dataStream, "utf8")
       .digest("hex");
     console.log("Generated Signature:", signature);
 
-    // Build the final API URL with the signature
-    const apiUrl = `http://arena.safecreative.org/v2/`;  // Ensure correct base URL
+    // Append signature to the parameters
     const finalUrl = `${apiUrl}?${sortedParams}&signature=${signature}`;
     console.log("Final API URL:", finalUrl);
 
@@ -321,7 +305,6 @@ exports.AuthoRized = async (req, res) => {
 
     // Return the response to the client
     return res.status(200).json(response.data);
-
   } catch (error) {
     // Handle errors and log detailed information
     console.error(
