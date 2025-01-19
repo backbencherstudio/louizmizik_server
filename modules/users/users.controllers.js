@@ -141,6 +141,14 @@ const registerUser = async (req, res) => {
   }
 };
 
+
+
+
+
+
+
+
+
 // Resend OTP
 const resendOtp = async (req, res) => {
   try {
@@ -244,7 +252,7 @@ const authenticateUser = async (req, res) => {
       return;
     }
     if (user.blacklist && new Date() > new Date(user.subscriptionEndDAte)) {
-      res.status(400).json({ message: "You are in blacklist!!" });
+      return res.status(400).json({ message: "You are in blacklist!!" });
     }
 
     const passwordMatch = await bcrypt.compare(password, user.password);
@@ -274,6 +282,81 @@ const authenticateUser = async (req, res) => {
     res.status(500).json(error.message);
   }
 };
+
+
+
+
+const google = async (req, res, next) => {
+  const { name, email } = req.body;
+  try {
+    const user = await User.findOne({ email });
+    if (user) {
+      if (user.blacklist && new Date() > new Date(user.subscriptionEndDAte)) {
+       return res.status(400).json({ message: "You are in blacklist!!" });
+      }
+      // remove password from user for frontend sequrity--------------------------------
+      const { password: password, ...rest } = user;
+      
+      const token = sign(
+        { userEmail: user.email, userId: user._id },
+        process.env.WEBTOKEN_SECRET_KEY,
+        { expiresIn: "1d" }
+      );
+  
+      const options = {
+        expires: new Date(Date.now() + 24 * 60 * 60 * 1000),
+        httpOnly: true,
+        secure: true,
+      };
+      res
+      .status(200)
+      .cookie("token", token, options)
+      .json({ message: "Login successful", user, token });
+      
+    } else {
+      const generatePass = Math.random().toString(36).slice(-8);
+      const hashpasswoard = bcrypt.hashSync(generatePass, 10);
+      const newUser = new User({
+        name: name,
+        email: email,
+        password: hashpasswoard,
+       
+      });
+      await newUser.save();
+      // remove password from user for frontend sequrity--------------------------------
+      const { password: password, ...rest } = newUser;
+      
+      const token = sign(
+        { userEmail: newUser.email, userId: newUser._id },
+        process.env.WEBTOKEN_SECRET_KEY,
+        { expiresIn: "1d" }
+      )
+      const options = {
+        expires: new Date(Date.now() + 24 * 60 * 60 * 1000),
+        httpOnly: true,
+        secure: true,
+      };
+      res
+      .status(200)
+      .cookie("token", token, options)
+      .json({ message: "Login successful", newUser, token });
+    }
+  } catch (err) {
+    return console.log(err);
+  }
+};
+
+
+
+
+
+
+
+
+
+
+
+
 
 // Edit user profile
 const editUserProfile = async (req, res) => {
@@ -571,4 +654,5 @@ module.exports = {
   userAlltotalCredit,
   allRegisterBeatandTransections,
   OneUser,
+  google
 };

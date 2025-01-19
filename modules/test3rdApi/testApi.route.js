@@ -1,7 +1,8 @@
 const express = require("express");
 
 const router = express.Router();
-const { testApi } = require("./testApi.controller");
+const { testApi, AuthoRized } = require("./testApi.controller");
 
 router.get("/testApi", testApi);
+router.get("/Authorized", AuthoRized)
 module.exports = router;
