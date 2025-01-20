@@ -11,12 +11,17 @@ const Beat = require("../beat/beat.model");
 const fs = require("fs");
 const path = require("path");
 const { fileURLToPath } = require("url");
+const crypto = require('crypto');
+
+
+
 
 const {
   generateOTP,
   sendUpdateEmailOTP,
   sendForgotPasswordOTP,
   sendRegistrationOTPEmail,
+  sendOTPEmail,
 } = require("../../util/otpUtils");
 
 const generateToken = (id, email, role) => {
@@ -284,6 +289,84 @@ const authenticateUser = async (req, res) => {
 };
 
 
+// ----------------------------------------
+const forgotPassword = async (req, res) => {
+  try {
+    const { email } = req.body;
+
+    if (!email) {
+      return res.status(400).json({ message: "Please provide your email" });
+    }
+
+    // Find user by email
+    const user = await User.findOne({ email });
+
+    if (!user) {
+      return res.status(400).json({ message: "User not found!" });
+    }
+
+    // Generate password reset token (expires in 1 hour)
+    const resetToken = generateResetToken(user._id);
+
+    // Save the reset token and expiration time in the user's record
+    user.resetPasswordToken = resetToken;
+    user.resetPasswordExpires = Date.now() + 3600000; // 1 hour expiry
+    await user.save();
+
+     sendOTPEmail(email, resetToken)
+     return res.status(200).json({ message: "Password reset token sent to your email" });
+
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ message: "Internal Server Error" });
+  }
+
+
+};
+
+
+const resetPassword = async (req, res) => {
+  try {
+    const { token, newPassword } = req.body;
+
+    if (!token || !newPassword) {
+      return res.status(400).json({ message: "Token and new password are required" });
+    }
+
+    // Find user by reset token and check if the token is valid and not expired
+    const user = await User.findOne({
+      resetPasswordToken: token,
+      resetPasswordExpires: { $gt: Date.now() }, // Ensure token is not expired
+    });
+
+    if (!user) {
+      return res.status(400).json({ message: "Invalid or expired token" });
+    }
+
+    // Validate password length (e.g., should be more than 6 characters)
+    if (newPassword.length < 6) {
+      return res.status(400).json({ message: "Password must be at least 6 characters long" });
+    }
+
+    // Hash the new password
+    const hashedPassword = await hashPassword(newPassword);
+
+    // Update user's password and clear the reset token and expiration fields
+    user.password = hashedPassword;
+    user.resetPasswordToken = undefined;
+    user.resetPasswordExpires = undefined;
+
+    await user.save();
+
+    // Send success response
+    return res.status(200).json({ message: "Password successfully reset" });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ message: "Internal Server Error" });
+  }
+};
+
+
 
 
 const google = async (req, res, next) => {
@@ -367,11 +450,14 @@ const editUserProfile = async (req, res) => {
       return res.status(400).json({ message: "User not found" });
     }
     const imageUrl = `${req?.file?.filename}` || "";
+    console.log(req.file);
 
-    if (req.file !== undefined) {
+    if (req.file !== undefined || req.file !== '') {
       req.body.avatar = imageUrl;
+      if(user.avatar){
       deleteImage(user.avatar)
     }
+  }
     if (!req.params.userId) {
       return res.status(400).json({ message: "Unauthorized user" });
     }
@@ -640,6 +726,11 @@ function deleteImage(imagePath) {
   });
 }
 
+function generateResetToken() {
+  const otp = Math.floor(100000 + Math.random() * 900000); // Generates a 6-digit number
+  return otp.toString(); // Return it as a string
+}
+
 module.exports = {
   checkAuthStatus,
   logout,
@@ -655,5 +746,7 @@ module.exports = {
   userAlltotalCredit,
   allRegisterBeatandTransections,
   OneUser,
-  google
+  google,
+  forgotPassword,
+  resetPassword
 };

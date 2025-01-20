@@ -205,3 +205,27 @@ export const KeyEventFailedNotificationEmail = (userName, email) => {
 };
 
 
+export const resetPasswordEmail = (email, resetToken) => {
+  return `
+    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: auto; padding: 20px; border: 1px solid #ddd; border-radius: 10px; box-shadow: 0 4px 8px rgba(0,0,0,0.1);">
+      <div style="text-align: center; margin-bottom: 20px;">
+        <img src="https://via.placeholder.com/150x50?text=Your+Logo" alt="Logo" style="max-width: 100%; height: auto;">
+      </div>
+      <h2 style="color: #007bff;">Password Reset Request</h2>
+      <p style="color: #333; font-size: 18px;">Hello,</p>
+      <p style="color: #333; font-size: 16px;">You requested a password reset. Please use the following token to reset your password:</p>
+      <p style="color: #333; font-size: 16px; font-weight: bold; color: #007bff;">Token: ${resetToken}</p>
+      <p style="color: #333; font-size: 16px;">Note: The token will expire in 1 hour.</p>
+      <p style="color: #333; font-size: 16px;">If you did not request a password reset, please ignore this email.</p>
+      <p style="color: #333; font-size: 16px;">Thank you for using our service.</p>
+      <p style="color: #333; font-size: 16px;">Best regards,</p>
+      <p style="color: #333; font-size: 16px;">The Support Team</p>
+      <hr style="border: none; border-top: 1px solid #ddd; margin: 20px 0;">
+      <p style="color: #777; font-size: 12px; text-align: center;">This email was sent to ${email}. If you have any questions or need assistance, please contact our support team.</p>
+    </div>
+  `;
+};
+
+
+
+
