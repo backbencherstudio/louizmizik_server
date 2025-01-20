@@ -40,7 +40,7 @@ exports.testApi = async (req, res) => {
       .update(dataStream, "utf8")
       .digest("hex");
 
-    console.log("Generated Signature: m10000000000000000000000", signature);
+    //console.log("Generated Signature: m10000000000000000000000", signature);
 
     const apiUrl = `http://arena.safecreative.org/v2/`;
     const finalUrl = `${apiUrl}?${sortedParams}&signature=${signature}`;
@@ -63,7 +63,7 @@ exports.testApi = async (req, res) => {
       const privatekey1 = result.authkeycreate.privatekey[0];
       console.log(authkey, privateKey);
       const apiUrl2 = "http://arena.safecreative.org/api-ui/authkey.edit";
-      const level = "GET";
+      const level = "MANAGE";
 
 
       //const redirectUrl = `${apiUrl}?authkey=${authkey}&level=${level}&sharedkey=${sharedKey}&ztime=${ztime}&signature=${signature}`;
@@ -251,71 +251,77 @@ exports.testApi = async (req, res) => {
 
 
 exports.AuthoRized = async (req, res) => {
+  const { filename } = req.query;
+    if (!filename) {
+      return res.status(400).json({ error: "Filename is required." });
+    }
+  
+  const uploadurl = await makeUploadurl(filename)
+  console.log("last",    uploadurl)
+  return res.status(200).json({uploadurl });
+};
+
+
+
+
+// const crypto = require("crypto");
+// const axios = require("axios");
+// const xml2js = require("xml2js");
+
+const makeUploadurl = async (filename) => {
   try {
     const authkey = process.env.AUTH_KEY; // Authorization key
     const privateKey = process.env.PRIVATE_AUTH_KEY; // Private key
     const apiUrl = "http://arena.safecreative.org/v2/"; // Base API URL
     const component = "work.upload.lookup"; // Component
 
-    // Extract filename from query parameters
-    const { filename } = req.query;
-    if (!filename) {
-      return res.status(400).json({ error: "Filename is required." });
-    }
-
     const ztime = Date.now(); // Current timestamp in milliseconds
-    console.log("ztime (milliseconds):", ztime);
 
     // Prepare parameters in the required order
     const params = {
-      component: component,
-      authkey: authkey,
+      component,
+      authkey,
       bypost: true,
-      filename: filename,
-      ztime: ztime,
+      filename,
+      ztime,
     };
 
-    // Generate sorted query string for signature
-    const sortedQueryString = Object.entries(params)
-      .map(([key, value]) => `${key}=${encodeURIComponent(value)}`)
+    // Generate sorted query string for signature (sorted alphabetically by keys)
+    const sortedQueryString = Object.keys(params)
+      .sort() // Sort keys alphabetically
+      .map((key) => `${key}=${params[key]}`)
       .join("&");
 
-    console.log("Sorted Query String for Signature:", sortedQueryString);
-
-    // Create the data stream for signature generation
+    // Create the data stream for signature
     const dataStream = `${privateKey}&${sortedQueryString}`;
-    console.log("Data Stream for Signature:", dataStream);
 
     // Generate the SHA-1 signature
-    const signature = crypto
-      .createHash("sha1")
-      .update(dataStream, "utf8")
-      .digest("hex");
-    console.log("Generated Signature:", signature);
+    const signature = crypto.createHash("sha1").update(dataStream, "utf8").digest("hex");
 
-    // Construct the final URL in the required order
-    const finalUrl = `${apiUrl}?component=${encodeURIComponent(
-      component
-    )}&authkey=${encodeURIComponent(authkey)}&bypost=true&filename=${encodeURIComponent(
-      filename
-    )}&ztime=${ztime}&signature=${signature}`;
-
-    console.log("Final API URL:", finalUrl);
+    // Construct the final URL
+    const finalUrl = `${apiUrl}?${sortedQueryString}&signature=${signature}`;
 
     // Make the API request
     const response = await axios.post(finalUrl);
-    console.log("API Response:", response.data);
 
-    // Return the response to the client
-    return res.status(200).json(response.data);
+    // Parse the XML response using a promise-based approach
+    const parser = new xml2js.Parser();
+    const result = await parser.parseStringPromise(response.data); // Use the `parseStringPromise` method
+
+    // Extract uploadurl and uploadid
+    const uploadurl = result.workuploadlookup.uploadurl[0];
+    const uploadid = result.workuploadlookup.uploadid[0];
+    console.log(uploadid, uploadurl);
+
+    // Return the parsed data
+    return { uploadurl, uploadid };
   } catch (error) {
     console.error(
       "API Error:",
       error.response ? error.response.data : error.message
     );
-    return res.status(500).json({
+    return {
       error: error.response ? error.response.data : error.message,
-    });
+    };
   }
 };
-

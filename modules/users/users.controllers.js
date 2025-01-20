@@ -704,7 +704,9 @@ const allRegisterBeatandTransections = async (req, res) => {
 const OneUser = async (req, res) => {
   const { userId } = req.params;
   try {
-    const user = await User.findById(userId);
+    // Fetch the user and exclude password fields
+    const user = await User.findById(userId).select("-password -newpassword -confirmPassword");
+
     if (!user) {
       return res.status(400).json({ message: "User not found" });
     }
