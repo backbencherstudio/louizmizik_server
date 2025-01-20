@@ -13,7 +13,10 @@ const {
   userAlltotalCredit,
   allRegisterBeatandTransections,
   OneUser,
-  google
+  google,
+  forgotPassword,
+  resetPassword
+
 
 } = require("./users.controllers");
 const { verifyUser } = require("../../middleware/verifyUser");
@@ -27,7 +30,16 @@ route.get("/check", checkAuthStatus);
 route.post("/register", registerUser);
 route.post("/verify-otp", verifyOTP);
 route.post("/resendotp", resendOtp);
+
+
+
+
+
+
+// ----------------------------------------------------------
 route.post("/login", authenticateUser);
+route.post('/forgot-password', forgotPassword);
+route.post('/reset-password', resetPassword);
 route.post("/google/login", google)
 route.put("/update-profile/:userId", upload,   editUserProfile);
 route.post("/logout", logout);
