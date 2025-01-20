@@ -8,7 +8,8 @@ const {
   sendNewSubscriptionEmail,
   SubscriptionCanceledEmail,
   KeyEventNotificationEmail,
-  KeyEventFailedNotificationEmail
+  KeyEventFailedNotificationEmail,
+  resetPasswordEmail
 } = require("../constants/email_message");
 require("dotenv").config();
 
@@ -111,6 +112,14 @@ const sendBeatFailEmail = async (userName, email) => {
   );
 };
 
+const sendOTPEmail = async (email, resetToken) => {
+  await sendEmail(
+    email,
+    "Password Reset Token",
+    resetPasswordEmail(email, resetToken)
+  );
+};
+
 module.exports = {
   generateOTP,
   sendEmail,
@@ -122,5 +131,6 @@ module.exports = {
   sendSubscriptionEmail,
   sendSubscriptioncancelEmail,
   sendBeatSucceslEmail,
-  sendBeatFailEmail
+  sendBeatFailEmail,
+  sendOTPEmail
 };
