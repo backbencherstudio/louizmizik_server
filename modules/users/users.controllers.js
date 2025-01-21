@@ -251,6 +251,7 @@ const authenticateUser = async (req, res) => {
     }
 
     const user = await User.findOne({ email });
+    // kjsxjxdkj
 
     if (!user) {
       res.status(400).json({ message: "User not found!" });
