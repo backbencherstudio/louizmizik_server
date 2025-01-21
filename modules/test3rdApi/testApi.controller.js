@@ -428,7 +428,7 @@ exports.licenseGet = async () => {
   const apiUrl = "http://arena.safecreative.org/v2/";
 
   const component = "user.licenses";
-  const page = 1;  // Specify the page number (you can change it as needed)
+  const page = 1;  // Specify the page number
   const ztime = Date.now();  // Timestamp in milliseconds
   
   // Construct the string to sign
@@ -436,18 +436,18 @@ exports.licenseGet = async () => {
   
   // Generate the signature using SHA256
   const signature = crypto.createHash('sha256')
-    .update(stringToSign + privateKey)
+    .update(stringToSign + privateKey)  // Concatenate the private key to the string
     .digest('hex');
 
   // Construct the full URL with query parameters
   const requestUrl = `${apiUrl}?authkey=${authkey}&component=${component}&page=${page}&ztime=${ztime}&signature=${signature}`;
+  console.log("requestUrl",requestUrl)
 
   try {
     // Send the request
     const response = await axios.get(requestUrl);
     
-    // You can parse and work with the XML response if needed
-    // Here, for example, we can just log the response data:
+    // Log the response data
     console.log(response.data);  // Handle the response
     
     return response.data;

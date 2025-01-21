@@ -256,8 +256,8 @@ const certification = async (audio ,beatName) => {
 
   const license = await licenseGet()
   console.log("license",license)
-  const workRegisterrrr = await workRegister(uploadTicket,nonckeyGet, license);
-  console.log("workRegisterrrr",workRegisterrrr)
+  // const workRegisterrrr = await workRegister(uploadTicket,nonckeyGet, license);
+  // console.log("workRegisterrrr",workRegisterrrr)
 
   return uploadTicket;
   //return result;
