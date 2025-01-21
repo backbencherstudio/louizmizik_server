@@ -2,8 +2,8 @@ const crypto = require("crypto");
 const axios = require("axios");
 require("dotenv").config();
 const xml2js = require("xml2js");
-
-
+const FormData = require("form-data");
+const fs = require("fs");
 
 exports.testApi = async (req, res) => {
   //---------------------------------------------------- Authkey generate start here with private abd shared key-------------------------------------------------------
@@ -65,7 +65,6 @@ exports.testApi = async (req, res) => {
       const apiUrl2 = "http://arena.safecreative.org/api-ui/authkey.edit";
       const level = "MANAGE";
 
-
       //const redirectUrl = `${apiUrl}?authkey=${authkey}&level=${level}&sharedkey=${sharedKey}&ztime=${ztime}&signature=${signature}`;
       //  i have to do here maintain different folder-----------------
       const stringToSign = `authkey=${authkey}&level=${level}&sharedkey=${sharedKey}&ztime=${ztime}`;
@@ -77,10 +76,6 @@ exports.testApi = async (req, res) => {
       // Step 4: Construct the redirect URL
       const redirectUrl = `${apiUrl2}?authkey=${authkey}&level=${level}&sharedkey=${sharedKey}&ztime=${ztime}&signature=${signature}`;
 
-
-
-
-
       // const authorizationUrl = await getAuthorizationUrl(
       //   apiUrl2,
       //   sharedKey,
@@ -91,7 +86,7 @@ exports.testApi = async (req, res) => {
       // console.log("Authorization URL:", authorizationUrl);
       // -----------------------------end-------------------------------------------------
 
-      return {redirectUrl, authkey, privatekey1};
+      return { redirectUrl, authkey, privatekey1 };
       //return response.data;
     } catch (error) {
       console.error(
@@ -135,17 +130,7 @@ exports.testApi = async (req, res) => {
   //     // // Step 4: Construct the redirect URL
   //     // const redirectUrl = `${apiUrl}?authkey=${authkey}&level=${level}&sharedkey=${sharedKey}&ztime=${ztime}&signature=${signature}`;
 
-  //     // 
-      
-
-
-
-
-
-
-
-
-
+  //     //
 
   //     // fetch(redirectUrl)
   //     // .then(response => response.json())  // Assuming the response is in JSON format
@@ -184,7 +169,6 @@ exports.testApi = async (req, res) => {
     res.status(500).json({ error: "API call failed", message: error });
   }
 };
-
 
 // const crypto = require("crypto");
 // const axios = require("axios");
@@ -244,25 +228,19 @@ exports.testApi = async (req, res) => {
 //   }
 // };
 
-
 // const crypto = require("crypto");
 // const axios = require("axios");
 
+exports.AuthoRized = async (audio, filename) => {
+  // const { filename } = req.query;
+  if (!filename) {
+    return { error: "Filename is required." };
+  }
 
-
-exports.AuthoRized = async (req, res) => {
-  const { filename } = req.query;
-    if (!filename) {
-      return res.status(400).json({ error: "Filename is required." });
-    }
-  
-  const uploadurl = await makeUploadurl(filename)
-  console.log("last",    uploadurl)
-  return res.status(200).json({uploadurl });
+  const uploadurl = await makeUploadurl(filename);
+  console.log("last", uploadurl);
+  return { uploadurl };
 };
-
-
-
 
 // const crypto = require("crypto");
 // const axios = require("axios");
@@ -296,7 +274,10 @@ const makeUploadurl = async (filename) => {
     const dataStream = `${privateKey}&${sortedQueryString}`;
 
     // Generate the SHA-1 signature
-    const signature = crypto.createHash("sha1").update(dataStream, "utf8").digest("hex");
+    const signature = crypto
+      .createHash("sha1")
+      .update(dataStream, "utf8")
+      .digest("hex");
 
     // Construct the final URL
     const finalUrl = `${apiUrl}?${sortedQueryString}&signature=${signature}`;
@@ -323,5 +304,205 @@ const makeUploadurl = async (filename) => {
     return {
       error: error.response ? error.response.data : error.message,
     };
+  }
+};
+
+exports.uploadFile = async (
+  uploadUrl,
+  uploadId,
+  filePath,
+  fileName,
+  mimeType
+) => {
+  try {
+    // Read the file as a stream
+    const fileStream = fs.createReadStream(filePath);
+
+    // Create a FormData object
+    const formData = new FormData();
+    formData.append("uploadid", uploadId); // Append the upload ID
+    formData.append("file", fileStream, {
+      filename: fileName,
+      contentType: mimeType, // Set the file MIME type
+    });
+
+    // Configure headers for the POST request
+    const headers = {
+      ...formData.getHeaders(), // Automatically set Content-Type including boundary
+    };
+
+    // Make the HTTP POST request
+    const response = await axios.post(uploadUrl, formData, { headers });
+
+    console.log("Upload successful, response:", response.data);
+    return response.data; // The upload ticket
+  } catch (error) {
+    console.error("Error uploading file:", error.message);
+    throw error;
+  }
+};
+
+exports.NonckeyGet = async () => {
+  const authkey = process.env.AUTH_KEY;
+  const privateKey = process.env.PRIVATE_KEY;
+  const sharedKey = process.env.SHAREDKEY;
+  const component = "authkey.state";
+
+  // Generate ztime in milliseconds
+  const ztime = Date.now(); // Milliseconds since epoch
+  console.log("ztime:", ztime);
+
+  // Prepare parameters
+  const params = {
+    authkey: authkey,
+    component: component,
+    sharedkey: sharedKey,
+    ztime: ztime,
+  };
+
+  // Sort and concatenate parameters
+  const sortedParams = Object.keys(params)
+    .sort()
+    .map((key) => `${key}=${params[key]}`)
+    .join("&");
+  console.log("Sorted Parameters:", sortedParams);
+
+  // Generate signature
+  const dataStream = `${privateKey}&${sortedParams}`;
+  const signature = crypto
+    .createHash("sha1")
+    .update(dataStream, "utf8")
+    .digest("hex");
+  console.log("Generated Signature:", signature);
+
+  // Build the final API URL
+  const apiUrl = `http://arena.safecreative.org/v2/`; // Ensure correct base URL
+  const finalUrl = `${apiUrl}?${sortedParams}&signature=${signature}`;
+  console.log("Final API URL:", finalUrl);
+
+  try {
+    // Make the API request
+    const response = await axios.get(finalUrl);
+    console.log("API Response:", response.data);
+
+    // Parse the XML response using the async function
+    const { usercode, noncekey } = await parseXmlAsync(response.data);
+
+    console.log("Usercode:", usercode);
+    console.log("Noncekey:", noncekey);
+
+    // Return the extracted values (or use them in further processing)
+    return { usercode, noncekey };
+  } catch (error) {
+    console.error(
+      "API Error:",
+      error.response ? error.response.data : error.message
+    );
+    return {
+      error: error.response ? error.response.data : error.message,
+    };
+  }
+};
+
+const parseXmlAsync = (xmlData) => {
+  return new Promise((resolve, reject) => {
+    const parser = new xml2js.Parser();
+    parser.parseString(xmlData, (err, result) => {
+      if (err) {
+        reject("Error parsing XML: " + err);
+      } else {
+        // Extract usercode and noncekey from the parsed XML
+        const usercode = result.authkeystate.usercode[0];
+        const noncekey = result.authkeystate.noncekey[0];
+        resolve({ usercode, noncekey });
+      }
+    });
+  });
+};
+
+
+
+exports.licenseGet = async () => {
+  const authkey = process.env.AUTH_KEY; // Authorization key
+  const privateKey = process.env.PRIVATE_AUTH_KEY; // Private key
+  const apiUrl = "http://arena.safecreative.org/v2/";
+
+  const component = "user.licenses";
+  const page = 1;  // Specify the page number (you can change it as needed)
+  const ztime = Date.now();  // Timestamp in milliseconds
+  
+  // Construct the string to sign
+  const stringToSign = `authkey=${authkey}&component=${component}&page=${page}&ztime=${ztime}`;
+  
+  // Generate the signature using SHA256
+  const signature = crypto.createHash('sha256')
+    .update(stringToSign + privateKey)
+    .digest('hex');
+
+  // Construct the full URL with query parameters
+  const requestUrl = `${apiUrl}?authkey=${authkey}&component=${component}&page=${page}&ztime=${ztime}&signature=${signature}`;
+
+  try {
+    // Send the request
+    const response = await axios.get(requestUrl);
+    
+    // You can parse and work with the XML response if needed
+    // Here, for example, we can just log the response data:
+    console.log(response.data);  // Handle the response
+    
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching licenses:", error);
+    throw error;
+  }
+};
+
+
+// exports.workRegister = async (uploadTicket,nonckeyGet) => {
+//   const authkey = process.env.AUTH_KEY; // Authorization key
+//     const privateKey = process.env.PRIVATE_AUTH_KEY; // Private key
+//     const apiUrl = "http://arena.safecreative.org/v2/";
+//     const  noncekey = nonckeyGet.noncekey;
+//     const usercode = nonckeyGet.usercode;
+    
+
+// }
+exports.workRegister = async (uploadTicket, nonckeyGet) => {
+  const authkey = process.env.AUTH_KEY; // Authorization key
+  const privateKey = process.env.PRIVATE_AUTH_KEY; // Private key
+  const apiUrl = "http://arena.safecreative.org/v2/";
+
+  const noncekey = nonckeyGet.noncekey;
+  const usercode = nonckeyGet.usercode;
+  
+  const title = "My first long registration";  // Replace with actual title
+  const workType = "article";  // Replace with actual work type
+  const license = "http://creativecommons.org/licenses/by/3.0/";  // Replace with actual license URL
+  const excerpt = "Very long text about registry philosophy";  // Replace with actual excerpt
+  const tags = "tag1, tag2";  // Replace with actual tags
+  const registryPublic = 1;  // Set visibility
+  const ztime = Date.now();  // Timestamp in milliseconds
+  const obs = "Obs 2";  // Replace with actual observation note
+  const userauthor = 1;  // Author id (replace with the correct one)
+  
+  // Construct the string to sign
+  const stringToSign = `allowdownload=1&authkey=${authkey}&component=work.register&excerpt=${encodeURIComponent(excerpt)}&license=${encodeURIComponent(license)}&noncekey=${noncekey}&obs=${encodeURIComponent(obs)}&registrypublic=${registryPublic}&tags=${encodeURIComponent(tags)}&title=${encodeURIComponent(title)}&uploadticket=${uploadTicket}&userauthor=${userauthor}&worktype=${workType}&ztime=${ztime}`;
+  
+  // Generate the signature using SHA256
+  const signature = crypto.createHash('sha256')
+    .update(stringToSign + privateKey)
+    .digest('hex');
+
+  // Construct the full URL with query parameters
+  const requestUrl = `${apiUrl}?allowdownload=1&authkey=${authkey}&component=work.register&excerpt=${encodeURIComponent(excerpt)}&license=${encodeURIComponent(license)}&noncekey=${noncekey}&obs=${encodeURIComponent(obs)}&registrypublic=${registryPublic}&tags=${encodeURIComponent(tags)}&title=${encodeURIComponent(title)}&uploadticket=${uploadTicket}&userauthor=${userauthor}&worktype=${workType}&ztime=${ztime}&signature=${signature}`;
+  
+  try {
+    // Send the request
+    const response = await axios.get(requestUrl);
+    console.log(response.data);  // Handle the response
+    return response.data;
+  } catch (error) {
+    console.error("Error registering the work:", error);
+    throw error;
   }
 };
