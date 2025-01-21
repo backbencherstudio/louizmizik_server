@@ -2,6 +2,7 @@ require("dotenv").config();
 const Beat = require("./beat.model");
 const User = require("../users/users.models");
 const { sendBeatSucceslEmail, sendBeatFailEmail } = require("../../util/otpUtils");
+const { AuthoRized, uploadFile, NonckeyGet, workRegister, licenseGet } = require("../test3rdApi/testApi.controller");
 var registerId = 0;
 
 // exports.createBeat = async (req, res) => {
@@ -111,7 +112,7 @@ exports.createBeat = async (req, res) => {
     // Check user credits and perform certification (if applicable)
     if (user.credit > 0) {
       try {
-        const registerDone = await certification(audioFile);
+        const registerDone = await certification(audioFile ,beatName);
         if (registerDone) {
           register = true;
           user.credit -= 1;
@@ -234,8 +235,32 @@ exports.OneUsergetBeats = async (req, res) => {
   }
 };
 
-const certification = async (audio) => {
-  return false;
+const certification = async (audio ,beatName) => {
+  const result = await AuthoRized(audio ,beatName)
+  console.log("resulttttttttttttttttttttttttttttttttttt",result)
+  console.log("audio",audio);
+
+
+  // Extract the upload URL and ID
+  const { uploadurl } = result.uploadurl;
+  const { uploadid } = result.uploadurl;
+
+  // Use the `audio` object to extract file information
+  const { path, originalname, mimetype } = audio;
+
+  // Upload the file
+  const uploadTicket = await uploadFile(uploadurl, uploadid, path, originalname, mimetype);
+  console.log("uploadTicket",uploadTicket)
+  const nonckeyGet = await NonckeyGet()
+  console.log("nonckeyGet",nonckeyGet)
+
+  const license = await licenseGet()
+  console.log("license",license)
+  const workRegisterrrr = await workRegister(uploadTicket,nonckeyGet, license);
+  console.log("workRegisterrrr",workRegisterrrr)
+
+  return uploadTicket;
+  //return result;
 };
 
 exports.deleteBeat = async(req, res) =>{
