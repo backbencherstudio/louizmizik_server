@@ -237,8 +237,8 @@ exports.OneUsergetBeats = async (req, res) => {
 
 const certification = async (audio ,beatName) => {
   const result = await AuthoRized(audio ,beatName)
-  console.log("resulttttttttttttttttttttttttttttttttttt",result)
-  console.log("audio",audio);
+  //console.log("resulttttttttttttttttttttttttttttttttttt",result)
+  //console.log("audio",audio);
 
 
   // Extract the upload URL and ID
