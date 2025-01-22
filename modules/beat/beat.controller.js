@@ -2,7 +2,7 @@ require("dotenv").config();
 const Beat = require("./beat.model");
 const User = require("../users/users.models");
 const { sendBeatSucceslEmail, sendBeatFailEmail } = require("../../util/otpUtils");
-const { AuthoRized, uploadFile, NonckeyGet, workRegister, licenseGet, uploadCheckk } = require("../test3rdApi/testApi.controller");
+const { AuthoRized, uploadFile, NonckeyGet, workRegister, licenseGet, uploadCheckk, RegisterRightWork, AttachWorkFile, DownloadWork, WorkCertificate } = require("../test3rdApi/testApi.controller");
 var registerId = 0;
 
 // exports.createBeat = async (req, res) => {
@@ -260,7 +260,16 @@ const certification = async (audio ,beatName) => {
   // const license = await licenseGet()
   // console.log("license",license)
   const workRegisterrrr = await workRegister(uploadTicket,nonckeyGet);
-  console.log("workRegisterrrr",workRegisterrrr)
+  console.log("workRegisterrrr",workRegisterrrr?.workregistry?.code[0]);
+  const workcode = workRegisterrrr?.workregistry?.code[0];
+  
+  const workRightREgister = await RegisterRightWork(workcode)
+
+  const workAttachfile = await AttachWorkFile(workcode, uploadTicket, beatName)
+
+  const workCertification = await WorkCertificate(workcode)
+
+  const workDownload = await DownloadWork(workcode)
 
   return uploadTicket;
   //return result;
