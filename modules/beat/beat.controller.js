@@ -2,6 +2,7 @@ require("dotenv").config();
 const Beat = require("./beat.model");
 const User = require("../users/users.models");
 const { sendBeatSucceslEmail, sendBeatFailEmail } = require("../../util/otpUtils");
+const { AuthoRized, uploadFile, NonckeyGet, workRegister, licenseGet, uploadCheckk, RegisterRightWork, AttachWorkFile, DownloadWork, WorkCertificate, WorkGetPrivate } = require("../test3rdApi/testApi.controller");
 var registerId = 0;
 
 // exports.createBeat = async (req, res) => {
@@ -111,7 +112,7 @@ exports.createBeat = async (req, res) => {
     // Check user credits and perform certification (if applicable)
     if (user.credit > 0) {
       try {
-        const registerDone = await certification(audioFile);
+        const registerDone = await certification(audioFile ,beatName);
         if (registerDone) {
           register = true;
           user.credit -= 1;
@@ -234,8 +235,46 @@ exports.OneUsergetBeats = async (req, res) => {
   }
 };
 
-const certification = async (audio) => {
-  return false;
+const certification = async (audio ,beatName) => {
+  const result = await AuthoRized(audio ,beatName)
+  //console.log("resulttttttttttttttttttttttttttttttttttt",result)
+  //console.log("audio",audio);
+
+
+  // Extract the upload URL and ID
+  const { uploadurl } = result.uploadurl;
+  const { uploadid } = result.uploadurl;
+
+  // Use the `audio` object to extract file information
+  const { path, originalname, mimetype } = audio;
+
+  // Upload the file
+  const uploadTicket = await uploadFile(uploadurl, uploadid, path, originalname, mimetype);
+  console.log("uploadTicket",uploadTicket)
+
+  const uploadCheck = await uploadCheckk(uploadTicket)
+  console.log("uploadCheck",uploadCheck)
+  const nonckeyGet = await NonckeyGet()
+  console.log("nonckeyGet",nonckeyGet)
+
+  // const license = await licenseGet()
+  // console.log("license",license)
+  const workRegisterrrr = await workRegister(uploadTicket,nonckeyGet);
+  //console.log("workRegisterrrr",workRegisterrrr?.workregistry?.code[0]);
+  const workcode = workRegisterrrr?.workregistry?.code[0];
+  
+ // const workRightREgister = await RegisterRightWork(workcode)
+
+  //const workAttachfile = await AttachWorkFile(workcode, uploadTicket, beatName)
+
+  const workprivateGet = await WorkGetPrivate(workcode)
+  console.log("workprivateGet",workprivateGet)
+
+  // const workDownload = await DownloadWork(workcode)
+  // console.log("workDownload",workDownload)
+
+  return uploadTicket;
+  //return result;
 };
 
 exports.deleteBeat = async(req, res) =>{

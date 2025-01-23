@@ -217,7 +217,8 @@ exports.cancelSubscription = async (req, res) => {
 
     // Update subscription status in MongoDB
     subscription.status = "canceled";
-    subscription.endDate = new Date();
+    //subscription.endDate = new Date();
+    user.subscriptionEndDAte = subscription.endDate
     user.active = false;
     await user.save();
     await subscription.save();
