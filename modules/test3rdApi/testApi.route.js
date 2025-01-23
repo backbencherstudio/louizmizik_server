@@ -1,10 +1,12 @@
 const express = require("express");
 
 const router = express.Router();
-const { testApi, AuthoRized } = require("./testApi.controller");
+const { testApi, AuthoRized, DownloadWork } = require("./testApi.controller");
 
 router.get("/testApi", testApi);
+
 router.get("/Authorized", AuthoRized)
+
 router.get('/safecreative/callback', async (req, res) => {
     try {
       const {
@@ -33,6 +35,8 @@ router.get('/safecreative/callback', async (req, res) => {
         case 'REGISTERED':
           console.log(`Work ${code} is now fully registered`);
           console.log("aaammmmmmmmmmmmmmmi caaaaaaaaaaaaaaalllllllllllbaaaccccccccccccck fully registered")
+          const workDownload = await DownloadWork(code);
+          console.log("webhook routeee   workDownload",workDownload)
           // Add your logic here for fully registered works
           break;
         

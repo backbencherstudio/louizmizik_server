@@ -69,6 +69,8 @@ var registerId = 0;
 exports.createBeat = async (req, res) => {
   const { userId } = req.params;
 
+  console.log("body" , req.body)
+
   try {
     // Find user
     const user = await User.findById(userId);
@@ -93,6 +95,9 @@ exports.createBeat = async (req, res) => {
       producerName,
       releaseDate,
       youtubeUrl,
+      tags,
+      excerpt,
+      title
     } = req.body;
 
     // Get uploaded files
@@ -112,7 +117,7 @@ exports.createBeat = async (req, res) => {
     // Check user credits and perform certification (if applicable)
     if (user.credit > 0) {
       try {
-        const registerDone = await certification(audioFile ,beatName);
+        const registerDone = await certification(audioFile ,beatName, excerpt, tags, title);
         if (registerDone) {
           register = true;
           user.credit -= 1;
@@ -235,7 +240,7 @@ exports.OneUsergetBeats = async (req, res) => {
   }
 };
 
-const certification = async (audio ,beatName) => {
+const certification = async (audio ,beatName, excerpt, tags, title) => {
   const result = await AuthoRized(audio ,beatName)
   //console.log("resulttttttttttttttttttttttttttttttttttt",result)
   //console.log("audio",audio);
@@ -259,7 +264,7 @@ const certification = async (audio ,beatName) => {
 
   // const license = await licenseGet()
   // console.log("license",license)
-  const workRegisterrrr = await workRegister(uploadTicket,nonckeyGet);
+  const workRegisterrrr = await workRegister(uploadTicket,nonckeyGet, excerpt, tags, title);
   //console.log("workRegisterrrr",workRegisterrrr?.workregistry?.code[0]);
   const workcode = workRegisterrrr?.workregistry?.code[0];
   
@@ -285,5 +290,13 @@ if (deletedBeat.deletedCount > 0) {
   
   return res.status(500).json({ message: "No beat found with the specified ID.", error });
 }
+
+}
+
+exports.lala = async (req, res) => {
+  console.log("lala")
+  const workDownload = await DownloadWork("2501231683898");
+          console.log("webhook routeee   workDownload",workDownload)
+          return res.status(200).json({ message: "workDownload", workDownload });
 
 }
