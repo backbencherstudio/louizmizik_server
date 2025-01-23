@@ -240,6 +240,10 @@ exports.cancelSubscription = async (req, res) => {
   //     message: "Subscription canceled successfully",
   //     subscription: canceledSubscription,
   //   });
+  return res.status(200).json({
+    message: "Subscription canceled successfully",
+    subscription: canceledSubscription,
+  });
   } catch (error) {
     console.error("Error canceling subscription:", error);
     return res

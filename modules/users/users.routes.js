@@ -45,9 +45,9 @@ route.put("/update-profile/:userId", upload,   editUserProfile);
 route.post("/logout", logout);
 
 // Forgot passwords
-route.post("/request-forgot-password-otp", verifyUser, forgotPasswordOTPsend);
-route.post("/match-password-otp", verifyUser, matchForgotPasswordOTP);
-route.patch("/reset-forgot-password", verifyUser, resetPasssword);
+route.post("/request-forgot-password-otp",  forgotPasswordOTPsend);
+route.post("/match-password-otp",  matchForgotPasswordOTP);
+route.patch("/reset-forgot-password",  resetPasssword);
 
 route.get("/oneUserDetails/:userId", OneUser)
 route.get("/userAlltotalCredit/:userId", userAlltotalCredit)

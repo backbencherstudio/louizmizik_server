@@ -459,26 +459,46 @@ exports.licenseGet = async () => {
 
 
 
-exports.workRegister = async (uploadTicket, nonckeyGet) => {
+exports.workRegister = async (uploadTicket, nonckeyGet, excerpt, tags, title) => {
  
 
   const authkey = process.env.AUTH_KEY;
   const privateKey = process.env.PRIVATE_AUTH_KEY;
   const apiUrl = "http://arena.safecreative.org/v2/";
 
-  const callbackUrl = "https://2f4f-103-43-151-74.ngrok-free.app/api/support/safecreative/callback";
+  //const callbackUrl = "https://2f4f-103-43-151-74.ngrok-free.app/api/support/safecreative/callback";
 
   // Create params object with required parameters
+
+  // Convert tags array to string if it's an array
+  let formattedTags;
+  if (typeof tags === 'string') {
+    try {
+      // If tags is a JSON string, parse it first
+      const parsedTags = JSON.parse(tags);
+      formattedTags = parsedTags.join(', ');
+    } catch {
+      // If parsing fails, use the string as-is
+      formattedTags = tags;
+    }
+  } else if (Array.isArray(tags)) {
+    formattedTags = tags.join(', ');
+  } else {
+    formattedTags = "MUSIC"; // default fallback
+  }
+  console.log("formattedTags",formattedTags);
+
+
   const params = {
     allowdownload: 1,
     authkey,
     component: "work.register",
-    excerpt: "tungtag about registry SONGS",
+    excerpt: excerpt,
     noncekey: nonckeyGet.noncekey,
-   
+    license:"copyright",
     registrypublic: 1,
-    tags: "lalalala, MUSIC",
-    title: "our pretty song",
+    tags: formattedTags,
+    title: title,
     uploadticket: uploadTicket,
     userauthor: 1,
     worktype: "Music",
@@ -715,8 +735,7 @@ exports.DownloadWork = async (workcode) => {
     
     // The result will contain the download URL and mimetype
     return {
-      url: result.downloadinfo.url[0],
-      mimetype: result.downloadinfo.mimetype[0]
+      result
     };
   } catch (error) {
     console.error("Error getting download URL:", error.response?.data || error.message);
