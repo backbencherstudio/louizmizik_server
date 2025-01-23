@@ -466,22 +466,26 @@ exports.workRegister = async (uploadTicket, nonckeyGet) => {
   const privateKey = process.env.PRIVATE_AUTH_KEY;
   const apiUrl = "http://arena.safecreative.org/v2/";
 
+  const callbackUrl = "https://2f4f-103-43-151-74.ngrok-free.app/api/support/safecreative/callback";
+
   // Create params object with required parameters
   const params = {
     allowdownload: 1,
     authkey,
     component: "work.register",
-    excerpt: "hIPHOP about registry SONGS",
+    excerpt: "tungtag about registry SONGS",
     noncekey: nonckeyGet.noncekey,
    
     registrypublic: 1,
-    tags: "TONE, MUSIC",
-    title: "My second longggggggggg registration",
+    tags: "lalalala, MUSIC",
+    title: "our pretty song",
     uploadticket: uploadTicket,
     userauthor: 1,
     worktype: "Music",
-    final: 1,          
-    ztime: Date.now()
+    final: 1,
+          
+    ztime: Date.now(),
+   
   };
 
   // Sort parameters alphabetically and create parameter string
@@ -766,7 +770,7 @@ exports.WorkGetPrivate = async (workcode) => {
 
   try {
     const response = await axios.get(requestUrl);
-    console.log("response",response)
+    //console.log("response",response)
     // Parse XML response
     const parser = new xml2js.Parser();
     const result = await parser.parseStringPromise(response.data);

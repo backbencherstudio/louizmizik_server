@@ -260,18 +260,18 @@ const certification = async (audio ,beatName) => {
   // const license = await licenseGet()
   // console.log("license",license)
   const workRegisterrrr = await workRegister(uploadTicket,nonckeyGet);
-  console.log("workRegisterrrr",workRegisterrrr?.workregistry?.code[0]);
+  //console.log("workRegisterrrr",workRegisterrrr?.workregistry?.code[0]);
   const workcode = workRegisterrrr?.workregistry?.code[0];
   
-  const workRightREgister = await RegisterRightWork(workcode)
+ // const workRightREgister = await RegisterRightWork(workcode)
 
-  const workAttachfile = await AttachWorkFile(workcode, uploadTicket, beatName)
+  //const workAttachfile = await AttachWorkFile(workcode, uploadTicket, beatName)
 
   const workprivateGet = await WorkGetPrivate(workcode)
   console.log("workprivateGet",workprivateGet)
 
-  const workDownload = await DownloadWork(workcode)
-  console.log("workDownload",workDownload)
+  // const workDownload = await DownloadWork(workcode)
+  // console.log("workDownload",workDownload)
 
   return uploadTicket;
   //return result;
