@@ -1,5 +1,5 @@
 const express = require("express");
-const { createBeat, OneUsergetBeats,deleteBeat } = require("./beat.controller");
+const { createBeat, OneUsergetBeats,deleteBeat, lala } = require("./beat.controller");
 const upload = require("../../middleware/multerConfig");
 const { verifyUser } = require("../../middleware/verifyUser");
 
@@ -17,4 +17,6 @@ router.post(
 
 router.get("/get-beats/:userId", verifyUser, OneUsergetBeats);
 router.delete("/deleteBeat/:id", verifyUser, deleteBeat)
+
+router.get("/test", lala)
 module.exports = router;
