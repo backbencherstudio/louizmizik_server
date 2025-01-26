@@ -436,10 +436,10 @@ exports.searchBeats = async (req, res) => {
       ],
     });
 
-    res.status(200).json(beats);
+   return  res.status(200).json(beats);
   } catch (error) {
     console.error(error);
-    res.status(500).json({ error: "An error occurred while searching for beats" });
+   return res.status(500).json({ error: "An error occurred while searching for beats" });
   }
 };
 
@@ -481,15 +481,11 @@ exports.searchUserBeats = async (req, res) => {
       });
     }
 
-    res.status(200).json({
-      message: "Beats found successfully",
-      beats,
-      count: beats.length
-    });
+    return  res.status(200).json(beats);
 
   } catch (error) {
     console.error("Search error:", error);
-    res.status(500).json({ 
+    return res.status(500).json({ 
       error: "An error occurred while searching for user beats",
       details: error.message 
     });
