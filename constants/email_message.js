@@ -43,21 +43,21 @@ export const emailUpdateOTP = (userName, email, newOTP) => {
 
 export const emailForgotPasswordOTP = (userName, email, OTP) => {
   return `
-    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: auto; padding: 20px; border: 1px solid #ddd; border-radius: 10px; box-shadow: 0 4px 8px rgba(0,0,0,0.1);">
+    <div style="font-family: Arial, sans-serif; max-width: 600px; background-color: #0f0f0f; margin: auto; padding: 20px; border: 1px solid #ddd; border-radius: 10px; box-shadow: 0 4px 8px rgba(0,0,0,0.1);">
       <div style="text-align: center; margin-bottom: 20px;">
-        <img src="https://via.placeholder.com/150x50?text=SocialApp" alt="SocialApp Logo" style="max-width: 100%; height: auto;">
+        <h1 style="color: #7132e9; font-size: 30px;">BeatProtect</h1>
       </div>
-      <h2 style="color: #007bff;">Forgot Password Request</h2>
-      <p style="color: #333; font-size: 18px;">Hi ${userName},</p>
-      <p style="color: #333; font-size: 16px;">You have requested to reset your password on SocialApp. Please use the OTP code below to proceed:</p>
+      <h2 style="color: #7132e9;">Forgot Password Request</h2>
+      <p style="color: #fff; font-size: 18px;">Hi ${userName},</p>
+      <p style="color: #fff; font-size: 16px;">You have requested to reset your password on Beat Protect. Please use the OTP code below to proceed:</p>
       <div style="text-align: center; margin: 20px 0;">
-        <div style="display: inline-block; padding: 15px 30px; background-color: #007bff; color: #fff; font-size: 24px; font-weight: bold; border-radius: 5px; box-shadow: 0 4px 8px rgba(0,0,0,0.1);">${OTP}</div>
+        <div style="display: inline-block; padding: 15px 30px; background-color: #7132e9; color: #fff; font-size: 24px; font-weight: bold; border-radius: 5px; box-shadow: 0 4px 8px rgba(0,0,0,0.1);">${OTP}</div>
       </div>
-      <p style="color: #333; font-size: 16px;">This OTP is valid for 10 minutes. If you did not request this password reset, please ignore this email.</p>
-      <p style="color: #333; font-size: 16px;">Cheers,</p>
-      <p style="color: #333; font-size: 16px;">The SocialApp Team</p>
+      <p style="color: #fff; font-size: 16px;">This OTP is valid for 10 minutes. If you did not request this password reset, please ignore this email.</p>
+      <p style="color: #fff; font-size: 16px;">Cheers,</p>
+      <p style="color: #fff; font-size: 16px;">The Beat Protect Team</p>
       <hr style="border: none; border-top: 1px solid #ddd; margin: 20px 0;">
-      <p style="color: #777; font-size: 12px; text-align: center;">This email was sent to ${email}. If you did not initiate this password reset, please disregard this email.</p>
+      <p style="color: #fff; font-size: 12px; text-align: center;">This email was sent to ${email}. If you did not initiate this password reset, please disregard this email.</p>
     </div>
   `;
 };
