@@ -1,7 +1,7 @@
 const express = require("express");
 
 const router = express.Router();
-const { testApi, AuthoRized, DownloadWork } = require("./testApi.controller");
+const { testApi, AuthoRized, DownloadWork, certificateCheck, downloadCertificate, getStamp } = require("./testApi.controller");
 
 router.get("/testApi", testApi);
 
@@ -35,8 +35,18 @@ router.get('/safecreative/callback', async (req, res) => {
         case 'REGISTERED':
           console.log(`Work ${code} is now fully registered`);
           console.log("aaammmmmmmmmmmmmmmi caaaaaaaaaaaaaaalllllllllllbaaaccccccccccccck fully registered")
+          
+          const checkCertificate = await certificateCheck(code);
+          console.log("webhook routeee   checkCertificate",checkCertificate)
           const workDownload = await DownloadWork(code);
           console.log("webhook routeee   workDownload",workDownload)
+         
+            // Get download URL
+           
+            
+            // You can now use this URL to download the certificate
+            // Either return it to the client or download it server-side using axios
+          
           // Add your logic here for fully registered works
           break;
         
@@ -53,5 +63,12 @@ router.get('/safecreative/callback', async (req, res) => {
       res.status(500).json({ error: error.message });
     }
   });
+
+
+router.get("/stamp", async (req, res) => {
+  const stamp = await getStamp();
+  console.log("stamp", stamp);
+  return res.status(200).json({ stamp });
+});
 
 module.exports = router;
