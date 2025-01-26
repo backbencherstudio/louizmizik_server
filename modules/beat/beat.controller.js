@@ -273,8 +273,9 @@ const certification = async (audio ,beatName, excerpt, tags, title) => {
   //const workAttachfile = await AttachWorkFile(workcode, uploadTicket, beatName)
 
   const workprivateGet = await WorkGetPrivate(workcode)
+  console.log("==============================================================================")
   console.log("workprivateGet",workprivateGet)
-
+  console.log("==============================================================================")
   // const workDownload = await DownloadWork(workcode)
   // console.log("workDownload",workDownload)
 

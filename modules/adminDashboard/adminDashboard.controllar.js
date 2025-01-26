@@ -443,6 +443,59 @@ exports.searchBeats = async (req, res) => {
   }
 };
 
+exports.searchUserBeats = async (req, res) => {
+  try {
+    const { query } = req.query;
+    const { userId } = req.params; // Get userId from params
+
+    if (!query) {
+      return res.status(400).json({ error: "Query parameter is required" });
+    }
+
+    if (!userId) {
+      return res.status(400).json({ error: "User ID is required" });
+    }
+
+    // Create a regex for case-insensitive partial match
+    const regex = new RegExp(query, "i");
+
+    // Search across multiple fields but only for the specific user
+    const beats = await Beat.find({
+      userId: userId, // Add user filter
+      $or: [
+        { beatName: regex },
+        { fullName: regex },
+        { genre: regex },
+        { producerName: regex },
+        { collaborators: regex },
+        { youtubeUrl: regex },
+        { audioPath: regex },
+        { imagePath: regex },
+      ],
+    });
+
+    if (beats.length === 0) {
+      return res.status(200).json({ 
+        message: "No beats found for this search query",
+        beats: [] 
+      });
+    }
+
+    res.status(200).json({
+      message: "Beats found successfully",
+      beats,
+      count: beats.length
+    });
+
+  } catch (error) {
+    console.error("Search error:", error);
+    res.status(500).json({ 
+      error: "An error occurred while searching for user beats",
+      details: error.message 
+    });
+  }
+};
+
 
 exports.getRevenueAndCredit = async (req, res) => {
   try {

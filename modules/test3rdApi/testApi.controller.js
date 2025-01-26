@@ -76,7 +76,6 @@ exports.testApi = async (req, res) => {
       // Step 4: Construct the redirect URL
       const redirectUrl = `${apiUrl2}?authkey=${authkey}&level=${level}&sharedkey=${sharedKey}&ztime=${ztime}&signature=${signature}`;
 
-
       return { redirectUrl, authkey, privatekey1 };
       //return response.data;
     } catch (error) {
@@ -87,8 +86,6 @@ exports.testApi = async (req, res) => {
       throw error.response ? error.response.data : error.message;
     }
   };
-
-
 
   // -----------------------------------Parent Function--------------------------------------------------
   try {
@@ -172,7 +169,6 @@ exports.AuthoRized = async (audio, filename) => {
   return { uploadurl };
 };
 
-
 const makeUploadurl = async (filename) => {
   try {
     const authkey = process.env.AUTH_KEY; // Authorization key
@@ -193,29 +189,24 @@ const makeUploadurl = async (filename) => {
 
     // Generate sorted query string for signature (sorted alphabetically by keys)
     const sortedQueryString = Object.keys(params)
-      .sort() 
+      .sort()
       .map((key) => `${key}=${params[key]}`)
       .join("&");
 
- 
     const dataStream = `${privateKey}&${sortedQueryString}`;
 
- 
     const signature = crypto
       .createHash("sha1")
       .update(dataStream, "utf8")
       .digest("hex");
 
-   
     const finalUrl = `${apiUrl}?${sortedQueryString}&signature=${signature}`;
 
     const response = await axios.post(finalUrl);
 
-  
     const parser = new xml2js.Parser();
-    const result = await parser.parseStringPromise(response.data); 
+    const result = await parser.parseStringPromise(response.data);
 
-   
     const uploadurl = result.workuploadlookup.uploadurl[0];
     const uploadid = result.workuploadlookup.uploadid[0];
     //console.log(uploadid, uploadurl);
@@ -325,8 +316,6 @@ exports.uploadCheckk = async (uploadTicket) => {
   }
 };
 
-
-
 exports.NonckeyGet = async () => {
   const authkey = process.env.AUTH_KEY;
   const privateKey = process.env.PRIVATE_KEY;
@@ -405,7 +394,6 @@ const parseXmlAsync = (xmlData) => {
   });
 };
 
-
 exports.licenseGet = async () => {
   const crypto = require("crypto");
   const axios = require("axios");
@@ -422,14 +410,14 @@ exports.licenseGet = async () => {
     authkey,
     component,
     page,
-    ztime
+    ztime,
   };
 
   // Sort and create parameter string
   const sortedParams = Object.keys(params)
     .sort()
-    .map(key => `${key}=${params[key]}`)
-    .join('&');
+    .map((key) => `${key}=${params[key]}`)
+    .join("&");
 
   // Create signature using privateKey&sortedParams (note the & between private key and params)
   const signature = crypto
@@ -439,29 +427,34 @@ exports.licenseGet = async () => {
 
   // Construct the final URL with query parameters
   const requestUrl = `${apiUrl}?${sortedParams}&signature=${signature}`;
-  
+
   console.log("Request URL:", requestUrl); // For debugging
 
   try {
     const response = await axios.get(requestUrl);
     console.log("Response data:", response.data); // Log response data
-    
+
     // Parse the XML response using xml2js
     const parser = new xml2js.Parser();
     const result = await parser.parseStringPromise(response.data);
-    
+
     return result;
   } catch (error) {
-    console.error("Error fetching licenses:", error.response?.data || error.message);
+    console.error(
+      "Error fetching licenses:",
+      error.response?.data || error.message
+    );
     throw error;
   }
 };
 
-
-
-exports.workRegister = async (uploadTicket, nonckeyGet, excerpt, tags, title) => {
- 
-
+exports.workRegister = async (
+  uploadTicket,
+  nonckeyGet,
+  excerpt,
+  tags,
+  title
+) => {
   const authkey = process.env.AUTH_KEY;
   const privateKey = process.env.PRIVATE_AUTH_KEY;
   const apiUrl = "http://arena.safecreative.org/v2/";
@@ -472,22 +465,21 @@ exports.workRegister = async (uploadTicket, nonckeyGet, excerpt, tags, title) =>
 
   // Convert tags array to string if it's an array
   let formattedTags;
-  if (typeof tags === 'string') {
+  if (typeof tags === "string") {
     try {
       // If tags is a JSON string, parse it first
       const parsedTags = JSON.parse(tags);
-      formattedTags = parsedTags.join(', ');
+      formattedTags = parsedTags.join(", ");
     } catch {
       // If parsing fails, use the string as-is
       formattedTags = tags;
     }
   } else if (Array.isArray(tags)) {
-    formattedTags = tags.join(', ');
+    formattedTags = tags.join(", ");
   } else {
     formattedTags = "MUSIC"; // default fallback
   }
-  console.log("formattedTags",formattedTags);
-
+  console.log("formattedTags", formattedTags);
 
   const params = {
     allowdownload: 1,
@@ -495,77 +487,75 @@ exports.workRegister = async (uploadTicket, nonckeyGet, excerpt, tags, title) =>
     component: "work.register",
     excerpt: excerpt,
     noncekey: nonckeyGet.noncekey,
-    license:"copyright",
+    license: "copyright",
     registrypublic: 1,
     tags: formattedTags,
     title: title,
     uploadticket: uploadTicket,
     userauthor: 1,
     worktype: "Music",
-    final: 1,
-          
+
     ztime: Date.now(),
-   
   };
 
   // Sort parameters alphabetically and create parameter string
   const sortedParams = Object.keys(params)
     .sort()
-    .map(key => {
+    .map((key) => {
       // Don't encode the values during signature creation
       return `${key}=${params[key]}`;
     })
-    .join('&');
+    .join("&");
 
-  console.log('String to sign:', `${privateKey}&${sortedParams}`);
+  console.log("String to sign:", `${privateKey}&${sortedParams}`);
 
   // Generate signature using SHA-1
   const signature = crypto
-    .createHash('sha1')
+    .createHash("sha1")
     .update(`${privateKey}&${sortedParams}`)
-    .digest('hex');
+    .digest("hex");
 
-  console.log('Generated signature:', signature);
+  console.log("Generated signature:", signature);
 
   // Now create the URL-encoded parameter string for the request
   const encodedParams = Object.keys(params)
     .sort()
-    .map(key => {
+    .map((key) => {
       const value = encodeURIComponent(params[key]);
       return `${key}=${value}`;
     })
-    .join('&');
+    .join("&");
 
   // Construct the final URL
   const requestUrl = `${apiUrl}?${encodedParams}&signature=${signature}`;
-  
+
   //console.log('Final URL:', requestUrl);
 
   try {
     const response = await axios.get(requestUrl);
-    
+
     // Parse XML response
     const parser = new xml2js.Parser();
     const result = await parser.parseStringPromise(response.data);
-    console.log("result",result)
+    console.log("result", result);
     return result;
   } catch (error) {
-    console.error("Error registering the work:", error.response?.data || error.message);
+    console.error(
+      "Error registering the work:",
+      error.response?.data || error.message
+    );
     throw error;
   }
 };
 
-
 exports.RegisterRightWork = async (workcode) => {
- 
-
   const authkey = process.env.AUTH_KEY;
   const privateKey = process.env.PRIVATE_AUTH_KEY;
   const apiUrl = "http://arena.safecreative.org/v2/";
 
   // Format dates properly
   const formatDate = (date) => {
-    return date.toISOString().replace(/\.\d{3}/, '');  // Remove milliseconds
+    return date.toISOString().replace(/\.\d{3}/, ""); // Remove milliseconds
   };
 
   const now = new Date();
@@ -579,57 +569,57 @@ exports.RegisterRightWork = async (workcode) => {
     workcode,
     type: "RIGHTS",
     rights: "Distribution and reproduction",
-    begindate: formatDate(now),           // e.g., "2024-01-25T00:00:00Z"
-    enddate: formatDate(endDate),         // e.g., "2025-01-25T00:00:00Z"
+    begindate: formatDate(now), // e.g., "2024-01-25T00:00:00Z"
+    enddate: formatDate(endDate), // e.g., "2025-01-25T00:00:00Z"
     jurisdictions: "Worldwide",
     rightswindow: "Web streaming",
-    ztime: Date.now()
+    ztime: Date.now(),
   };
 
   // Sort parameters alphabetically and create parameter string
   const sortedParams = Object.keys(params)
     .sort()
-    .map(key => {
+    .map((key) => {
       return `${key}=${params[key]}`;
     })
-    .join('&');
+    .join("&");
 
   // Generate signature using SHA-1
   const signature = crypto
-    .createHash('sha1')
+    .createHash("sha1")
     .update(`${privateKey}&${sortedParams}`)
-    .digest('hex');
+    .digest("hex");
 
   // Create URL-encoded parameter string
   const encodedParams = Object.keys(params)
     .sort()
-    .map(key => {
+    .map((key) => {
       const value = encodeURIComponent(params[key]);
       return `${key}=${value}`;
     })
-    .join('&');
+    .join("&");
 
   // Construct the final URL
   const requestUrl = `${apiUrl}?${encodedParams}&signature=${signature}`;
 
   try {
     const response = await axios.get(requestUrl);
-    
+
     // Parse XML response
     const parser = new xml2js.Parser();
     const result = await parser.parseStringPromise(response.data);
-    console.log("result",result)
+    console.log("result", result);
     return result;
   } catch (error) {
-    console.error("Error registering rights:", error.response?.data || error.message);
+    console.error(
+      "Error registering rights:",
+      error.response?.data || error.message
+    );
     throw error;
   }
 };
 
-
 exports.AttachWorkFile = async (workcode, uploadTicket, title) => {
-
-
   const authkey = process.env.AUTH_KEY;
   const privateKey = process.env.PRIVATE_AUTH_KEY;
   const apiUrl = "http://arena.safecreative.org/v2/";
@@ -641,50 +631,52 @@ exports.AttachWorkFile = async (workcode, uploadTicket, title) => {
     workcode,
     uploadticket: uploadTicket,
     title,
-    public: 1,  // Making the attachment public by default
-    ztime: Date.now()
+    public: 1, // Making the attachment public by default
+    ztime: Date.now(),
   };
 
   // Sort parameters alphabetically and create parameter string
   const sortedParams = Object.keys(params)
     .sort()
-    .map(key => {
+    .map((key) => {
       return `${key}=${params[key]}`;
     })
-    .join('&');
+    .join("&");
 
   // Generate signature using SHA-1
   const signature = crypto
-    .createHash('sha1')
+    .createHash("sha1")
     .update(`${privateKey}&${sortedParams}`)
-    .digest('hex');
+    .digest("hex");
 
   // Create URL-encoded parameter string
   const encodedParams = Object.keys(params)
     .sort()
-    .map(key => {
+    .map((key) => {
       const value = encodeURIComponent(params[key]);
       return `${key}=${value}`;
     })
-    .join('&');
+    .join("&");
 
   // Construct the final URL
   const requestUrl = `${apiUrl}?${encodedParams}&signature=${signature}`;
 
   try {
     const response = await axios.get(requestUrl);
-    
+
     // Parse XML response
     const parser = new xml2js.Parser();
     const result = await parser.parseStringPromise(response.data);
-    console.log("attachfile",result)
+    console.log("attachfile", result);
     return result;
   } catch (error) {
-    console.error("Error attaching file:", error.response?.data || error.message);
+    console.error(
+      "Error attaching file:",
+      error.response?.data || error.message
+    );
     throw error;
   }
 };
-
 
 exports.DownloadWork = async (workcode) => {
   const authkey = process.env.AUTH_KEY;
@@ -696,58 +688,57 @@ exports.DownloadWork = async (workcode) => {
     authkey,
     component: "work.download.private",
     code: workcode,
-    ztime: Date.now()
+    ztime: Date.now(),
   };
 
   // Sort parameters alphabetically and create parameter string
   const sortedParams = Object.keys(params)
     .sort()
-    .map(key => {
+    .map((key) => {
       return `${key}=${params[key]}`;
     })
-    .join('&');
+    .join("&");
 
   // Generate signature using SHA-1
   const signature = crypto
-    .createHash('sha1')
+    .createHash("sha1")
     .update(`${privateKey}&${sortedParams}`)
-    .digest('hex');
+    .digest("hex");
 
   // Create URL-encoded parameter string
   const encodedParams = Object.keys(params)
     .sort()
-    .map(key => {
+    .map((key) => {
       const value = encodeURIComponent(params[key]);
       return `${key}=${value}`;
     })
-    .join('&');
+    .join("&");
 
   // Construct the final URL
   const requestUrl = `${apiUrl}?${encodedParams}&signature=${signature}`;
 
   try {
     const response = await axios.get(requestUrl);
-    
+
     // Parse XML response
     const parser = new xml2js.Parser();
     const result = await parser.parseStringPromise(response.data);
-    console.log("download",result)
-    
+    console.log("download", result);
+
     // The result will contain the download URL and mimetype
     return {
-      result
+      result,
     };
   } catch (error) {
-    console.error("Error getting download URL:", error.response?.data || error.message);
+    console.error(
+      "Error getting download URL:",
+      error.response?.data || error.message
+    );
     throw error;
   }
 };
 
-
-
 exports.WorkGetPrivate = async (workcode) => {
- 
-
   const authkey = process.env.AUTH_KEY;
   const privateKey = process.env.PRIVATE_AUTH_KEY;
   const apiUrl = "http://arena.safecreative.org/v2/";
@@ -757,54 +748,192 @@ exports.WorkGetPrivate = async (workcode) => {
     authkey,
     component: "work.get.private",
     code: workcode,
-    ztime: Date.now()
+    ztime: Date.now(),
     // locale: 'en'  // Optional: uncomment and modify if you need a specific locale
   };
 
   // Sort parameters alphabetically and create parameter string
   const sortedParams = Object.keys(params)
     .sort()
-    .map(key => {
+    .map((key) => {
       return `${key}=${params[key]}`;
     })
-    .join('&');
+    .join("&");
 
   // Generate signature using SHA-1
   const signature = crypto
-    .createHash('sha1')
+    .createHash("sha1")
     .update(`${privateKey}&${sortedParams}`)
-    .digest('hex');
+    .digest("hex");
 
   // Create URL-encoded parameter string
   const encodedParams = Object.keys(params)
     .sort()
-    .map(key => {
+    .map((key) => {
       const value = encodeURIComponent(params[key]);
       return `${key}=${value}`;
     })
-    .join('&');
+    .join("&");
 
   // Construct the final URL
   const requestUrl = `${apiUrl}?${encodedParams}&signature=${signature}`;
 
   try {
     const response = await axios.get(requestUrl);
-    //console.log("response",response)
+    console.log("response", response);
     // Parse XML response
     const parser = new xml2js.Parser();
     const result = await parser.parseStringPromise(response.data);
-    console.log("certificate",result)
-    
+    console.log("certificate", result);
+
     // Check if the certificate request was successful
-    if (result?.work?.state[0] ) {
+    if (result?.work?.state[0]) {
       return {
         status: result?.work?.state[0],
-       
       };
-    } 
+    }
   } catch (error) {
-    console.error("Error requesting certificate:", error.response?.data || error.message);
+    console.error(
+      "Error requesting certificate:",
+      error.response?.data || error.message
+    );
     throw error;
+  }
+};
+
+exports.certificateCheck = async (code) => {
+  const authkey = process.env.AUTH_KEY;
+  const privateKey = process.env.PRIVATE_AUTH_KEY;
+  const apiUrl = "http://arena.safecreative.org/v2/";
+
+  // Create params object with required parameters
+  const params = {
+    authkey,
+    component: "work.certificate",
+    code,
+    ztime: Date.now(),
+  };
+
+  // Sort parameters alphabetically and create parameter string
+  const sortedParams = Object.keys(params)
+    .sort()
+    .map((key) => {
+      return `${key}=${params[key]}`;
+    })
+    .join("&");
+
+  // Generate signature using SHA-1
+  const signature = crypto
+    .createHash("sha1")
+    .update(`${privateKey}&${sortedParams}`)
+    .digest("hex");
+
+  // Create URL-encoded parameter string
+  const encodedParams = Object.keys(params)
+    .sort()
+    .map((key) => {
+      const value = encodeURIComponent(params[key]);
+      return `${key}=${value}`;
+    })
+    .join("&");
+
+  // Construct the final URL
+  const requestUrl = `${apiUrl}?${encodedParams}&signature=${signature}`;
+
+  try {
+    const response = await axios.get(requestUrl);
+
+    // Parse XML response
+    const parser = new xml2js.Parser();
+    const result = await parser.parseStringPromise(response.data);
+    console.log("Certificate check result:", result);
+
+    // Check if the certificate request was successful
+    if (result?.restvalueresponse?.state[0]) {
+      return {
+        status: result.restvalueresponse.state[0],
+      };
+    }
+
+    throw new Error("Invalid response format");
+  } catch (error) {
+    console.error(
+      "Error checking certificate:",
+      error.response?.data || error.message
+    );
+    throw error;
+  }
+};
+
+
+
+exports.getStamp = async () => {
+  try {
+    const url =
+     "https://arena.safecreative.org/work/2501241684182-hguyg-yuglui"
+    const sharedKey = process.env.SHAREDKEY; // Ensure SHAREDKEY is set in your environment variables
+
+    if (!sharedKey) {
+      throw new Error("SharedKey is required. Please set it in your environment variables.");
+    }
+
+    const apiUrl = "https://web.safestamper.com/api/stamp";
+
+    // Create URL-encoded parameter string
+    const params = new URLSearchParams({
+      sharedkey: sharedKey,
+      url1: url,
+    });
+
+    console.log("Request URL:", `${apiUrl}?${params.toString()}`); // Debug log for the full request URL
+
+    // Make the request
+    const response = await axios.get(`${apiUrl}?${params.toString()}`);
+
+    // Check response status
+    if (response.status === 200) {
+      return {
+        success: true,
+        jobId: response.data.replace(/"/g, ""), // Remove quotes from the response
+        message: "Stamp job created successfully",
+      };
+    } else {
+      throw new Error(`Unexpected response status: ${response.status}`);
+    }
+  } catch (error) {
+    console.error("Error details:", {
+      message: error.message,
+      response: error.response?.data,
+      status: error.response?.status,
+    });
+
+    // Handle specific errors
+    if (error.response?.status === 403) {
+      return {
+        success: false,
+        message: "Invalid shared key. Please verify your shared key.",
+      };
+    }
+
+    if (error.response?.status === 429) {
+      return {
+        success: false,
+        message: "No certification credits available.",
+      };
+    }
+
+    if (error.response?.status === 430) {
+      return {
+        success: false,
+        message: "No storage space available.",
+      };
+    }
+
+    // Generic error response
+    return {
+      success: false,
+      message: "An unexpected error occurred. Please try again later.",
+    };
   }
 };
 
