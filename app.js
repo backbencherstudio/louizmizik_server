@@ -220,9 +220,9 @@ app.post(
       console.log("user", user);
       const newSubscription = new Subscription({
         customerId,
-        userId: user._id,
-        userNAme: user.name,
-        userEmail: user.email,
+        userId: user?._id,
+        userNAme: user?.name,
+        userEmail: user?.email,
         subscriptionId: subscriptionId,
         status: "active",
         startDate: new Date(),
@@ -238,7 +238,7 @@ app.post(
 
         const newTransaction = new Transection({
           credit: 20,
-          userId: user._id,
+          userId: user?._id,
           customerId: customerId,
           method: "subscription",
           amount: 9.99,
