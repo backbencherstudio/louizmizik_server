@@ -54,6 +54,9 @@ const beatSchema = new mongoose.Schema(
     imagePath: {
       type: String,
     },
+    tags : {type : [String]},
+    excerpt : {type : String},
+    title : {type : String},
   },
   { timestamps: true }
 );

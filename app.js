@@ -235,6 +235,7 @@ app.post(
       if (user) {
         user.credit = (user.credit || 0) + 20;
         user.active = true;
+        user.subscriptionEndDAte = new Date(new Date().setDate(new Date().getDate() + 30));
 
         const newTransaction = new Transection({
           credit: 20,
