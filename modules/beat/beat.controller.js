@@ -215,6 +215,9 @@ exports.createBeat = async (req, res) => {
       audioPath: audioFile.path,
       imagePath: imageFile.path,
       registrasionId : "REG" + registerId,
+      tags,
+      excerpt,
+      title
     });
 
     // Respond with the new beat
