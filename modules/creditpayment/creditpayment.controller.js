@@ -1,6 +1,7 @@
 require("dotenv").config();
 const stripe = require("stripe")(process.env.STRIPE_SECRET_KEY);
 const User = require("../users/users.models");
+const Subscription = require("../payment/stripe.model");
 
 exports.extraCredit = async (req, res) => {
   const { userId } = req.params;
@@ -12,6 +13,23 @@ exports.extraCredit = async (req, res) => {
     if (!user) {
       return res.status(404).json({ message: "User not found" });
     }
+
+
+    // Check for active subscription
+    const subscription = await Subscription.findOne({
+      userId: userId,
+      status: 'active',
+      endDate: { $gt: new Date() } // Check if subscription hasn't expired
+    });
+
+    if (!subscription) {
+      return res.status(403).json({ 
+        message: "Active subscription required to purchase extra credits",
+        error: "SUBSCRIPTION_REQUIRED"
+      });
+    }
+
+
 
     const session = await stripe.checkout.sessions.create({
       payment_method_types: ["card"],

@@ -240,6 +240,20 @@ exports.OneUsergetBeats = async (req, res) => {
   }
 };
 
+exports.oneBeatDetails = async (req, res) => {
+  try{
+    const beat = await Beat.findById(req.params.id);
+    return res.status(200).json({ beat });
+  }
+  catch(error){
+    console.error(error);
+    return res.status(500).json({ message: "Error fetching beats", error });
+  }
+  
+  
+};
+
+
 const certification = async (audio ,beatName, excerpt, tags, title) => {
   const result = await AuthoRized(audio ,beatName)
   //console.log("resulttttttttttttttttttttttttttttttttttt",result)
