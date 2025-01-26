@@ -400,6 +400,18 @@ const google = async (req, res, next) => {
     } else {
       const generatePass = Math.random().toString(36).slice(-8);
       const hashpasswoard = bcrypt.hashSync(generatePass, 10);
+
+       // Fetch the country based on IP
+    let country = "Unknown"; // Default value in case location fetch fails
+    try {
+      const response = await fetch("http://get.geojs.io/v1/ip/geo.json");
+      if (response.ok) {
+        const data = await response.json();
+        country = data.country || "Unknown";
+      }
+    } catch (error) {
+      console.error("Error fetching IP-based location:", error.message);
+    }
       const user = new User({
         name: name,
         email: email,
@@ -410,6 +422,8 @@ const google = async (req, res, next) => {
       await user.save();
       // remove password from user for frontend sequrity--------------------------------
       const { password: password, ...rest } = user;
+
+
       
       const token = sign(
         { userEmail: user.email, userId: user._id },
@@ -430,6 +444,7 @@ const google = async (req, res, next) => {
     return console.log(err);
   }
 };
+
 
 
 
