@@ -170,10 +170,11 @@ app.post(
 
     if (event.type === "invoice.payment_succeeded") {
       const invoice = event.data.object;
-      //console.log("aitaaa", invoice);
+      console.log("aitaaa", invoice);
       const subscriptionId = invoice.subscription;
       const userId = invoice?.subscription_details?.metadata?.userId;
       const customerId = invoice?.subscription_details?.metadata?.customerId;
+      
 
       // stripe.subscriptions
       //   .retrieve(subscriptionId)
