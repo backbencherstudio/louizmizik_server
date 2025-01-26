@@ -687,11 +687,7 @@ const allRegisterBeatandTransections = async (req, res) => {
 
     const transactions = await Transection.find({ userId });
 
-    if (beats.length === 0 && transactions.length === 0) {
-      return res
-        .status(404)
-        .json({ message: "No beats or transactions found for this user" });
-    }
+ 
 
     return res.status(200).json({
       beats,
