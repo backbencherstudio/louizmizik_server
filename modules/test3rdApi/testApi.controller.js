@@ -494,7 +494,7 @@ exports.workRegister = async (
     uploadticket: uploadTicket,
     userauthor: 1,
     worktype: "Music",
-
+    final: 1,
     ztime: Date.now(),
   };
 

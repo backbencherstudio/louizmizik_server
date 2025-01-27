@@ -16,13 +16,20 @@ exports.extraCredit = async (req, res) => {
 
 
     // Check for active subscription
-    const subscription = await Subscription.findOne({
-      userId: userId,
-      status: 'active',
-      endDate: { $gt: new Date() } // Check if subscription hasn't expired
-    });
+    // const subscription = await Subscription.findOne({
+    //   userId: userId,
+    //   status: 'active',
+    //   endDate: { $gt: new Date() } // Check if subscription hasn't expired
+    // });
 
-    if (!subscription) {
+    // if (!subscription) {
+    //   return res.status(403).json({ 
+    //     message: "Active subscription required to purchase extra credits",
+    //     error: "SUBSCRIPTION_REQUIRED"
+    //   });
+    // }
+
+    if(user.active === false && new Date(user.subscriptionEndDAte) < new Date()){
       return res.status(403).json({ 
         message: "Active subscription required to purchase extra credits",
         error: "SUBSCRIPTION_REQUIRED"
