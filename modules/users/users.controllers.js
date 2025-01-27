@@ -465,13 +465,16 @@ const editUserProfile = async (req, res) => {
       return res.status(400).json({ message: "User not found" });
     }
     const imageUrl = `${req?.file?.filename}` || "";
-    console.log(req.file);
+    console.log("imageUrl",imageUrl)
+    
 
-    if (req.file !== undefined || req.file !== '') {
-      req.body.avatar = imageUrl;
-      if(user.avatar){
+    if (req.file !== undefined ) {
+      console.log(req.file);
+      console.log("user.avatarguyhguhiuuiohyiu")
+      if(user.avatar !== undefined){
       deleteImage(user.avatar)
     }
+    req.body.avatar = imageUrl;
   }
     if (!req.params.userId) {
       return res.status(400).json({ message: "Unauthorized user" });
