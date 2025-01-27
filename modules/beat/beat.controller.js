@@ -2,8 +2,9 @@ require("dotenv").config();
 const Beat = require("./beat.model");
 const User = require("../users/users.models");
 const { sendBeatSucceslEmail, sendBeatFailEmail } = require("../../util/otpUtils");
-const { AuthoRized, uploadFile, NonckeyGet, workRegister, licenseGet, uploadCheckk, RegisterRightWork, AttachWorkFile, DownloadWork, WorkCertificate, WorkGetPrivate, certificateCheck } = require("../test3rdApi/testApi.controller");
-var registerId = 0;
+const { AuthoRized, uploadFile, NonckeyGet, workRegister, licenseGet, uploadCheckk, RegisterRightWork, AttachWorkFile, DownloadWork, WorkCertificate, WorkGetPrivate, certificateCheck, linkUser } = require("../test3rdApi/testApi.controller");
+const counterModel = require("./counter.model");
+
 
 // exports.createBeat = async (req, res) => {
 //   const {userId} = req.params;
@@ -117,7 +118,7 @@ exports.createBeat = async (req, res) => {
     // Check user credits and perform certification (if applicable)
     if (user.credit > 0) {
       try {
-        const registerDone = await certification(audioFile ,beatName, excerpt, tags, title);
+        const registerDone = await certification(audioFile ,beatName, excerpt, tags, title, user);
         if (registerDone) {
           register = true;
           user.credit -= 1;
@@ -197,7 +198,7 @@ exports.createBeat = async (req, res) => {
     }
 
     // Create new beat
-    registerId++;
+    const registrationId = await getNextRegistrationId();
     const newBeat = await Beat.create({
       beatName,
       bpm,
@@ -214,7 +215,7 @@ exports.createBeat = async (req, res) => {
       register,
       audioPath: audioFile.path,
       imagePath: imageFile.path,
-      registrasionId : "REG" + registerId,
+      registrasionId : registrationId,
       tags,
       excerpt,
       title
@@ -257,7 +258,13 @@ exports.oneBeatDetails = async (req, res) => {
 };
 
 
-const certification = async (audio ,beatName, excerpt, tags, title) => {
+const certification = async (audio ,beatName, excerpt, tags, title, user) => {
+
+  // const adduser = await linkUser(user);
+  // console.log("adduser",adduser)
+
+
+
   const result = await AuthoRized(audio ,beatName)
   //console.log("resulttttttttttttttttttttttttttttttttttt",result)
   //console.log("audio",audio);
@@ -321,4 +328,21 @@ exports.lala = async (req, res) => {
           console.log("webhook routeee   workDownload",workDownload)
           return res.status(200).json({ message: "workDownload", workDownload });
 
+}
+
+
+async function getNextRegistrationId() {
+  try {
+    const counter = await counterModel.findByIdAndUpdate(
+      'registrationId',
+      { $inc: { sequence_value: 1 } },
+      { new: true, upsert: true }
+    );
+    
+    // Format the ID with leading zeros (e.g., REG001, REG002)
+    return `REG${counter.sequence_value.toString().padStart(6, '0')}`;
+  } catch (error) {
+    console.error('Error generating registration ID:', error);
+    throw error;
+  }
 }
