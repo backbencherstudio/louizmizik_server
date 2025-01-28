@@ -50,7 +50,10 @@ const beatSchema = new mongoose.Schema(
       type: String,
     },
     register:{type : Boolean, default : false},
+    registerCode : {type : Number, default : null},
+    registrationStatus : {type : String, default : ""},
     registrasionId : {type : String},
+    certificateUrl : {type : String, default : ""},
     imagePath: {
       type: String,
     },

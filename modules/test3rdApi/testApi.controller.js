@@ -1058,3 +1058,60 @@ exports.getStamp = async () => {
 };
 
 
+exports.DownloadCertificate = async (workcode) => {
+  const authkey = process.env.AUTH_KEY;
+  const privateKey = process.env.PRIVATE_AUTH_KEY;
+  const apiUrl = "http://arena.safecreative.org/v2/";
+
+  // Create params object with required parameters
+  const params = {
+    authkey,
+    component: "work.registration-certificate",
+    code: workcode,
+    ztime: Date.now(),
+  };
+
+  // Sort parameters alphabetically and create parameter string
+  const sortedParams = Object.keys(params)
+    .sort()
+    .map((key) => {
+      return `${key}=${params[key]}`;
+    })
+    .join("&");
+
+  // Generate signature using SHA-1
+  const signature = crypto
+    .createHash("sha1")
+    .update(`${privateKey}&${sortedParams}`)
+    .digest("hex");
+
+  // Create URL-encoded parameter string
+  const encodedParams = Object.keys(params)
+    .sort()
+    .map((key) => {
+      const value = encodeURIComponent(params[key]);
+      return `${key}=${value}`;
+    })
+    .join("&");
+
+  // Construct the final URL
+  const requestUrl = `${apiUrl}?${encodedParams}&signature=${signature}`;
+
+  try {
+    const response = await axios.get(requestUrl);
+
+    // Parse XML response
+    const parser = new xml2js.Parser();
+    const result = await parser.parseStringPromise(response.data);
+    
+
+    // The result will contain the download URL and mimetype
+    const downloadLink = result?.downloadinfo.url[0] || null;
+    return downloadLink;
+  } catch (error) {
+    return "";
+    
+  }
+};
+
+
