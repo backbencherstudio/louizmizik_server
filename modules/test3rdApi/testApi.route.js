@@ -47,7 +47,7 @@ router.get('/safecreative/callback', async (req, res) => {
             // You can now use this URL to download the certificate
             // Either return it to the client or download it server-side using axios
           
-          // Add your logic here for fully registered works
+          // Add your logic here for fully registered works ded
           break;
         
         case 'PRE_REGISTERED':
