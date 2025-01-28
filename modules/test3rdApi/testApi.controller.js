@@ -159,6 +159,126 @@ exports.testApi = async (req, res) => {
 // const crypto = require("crypto");
 // const axios = require("axios");
 
+
+
+
+
+
+
+
+
+
+
+
+
+exports.linkUser = async (user) => {
+  console.log("user",user)
+  try {
+    const sharedKey = process.env.SHAREDKEY;
+    const privateKey = process.env.PRIVATE_KEY;
+    
+    const apiUrl = "http://arena.safecreative.org/v2/";
+
+    // Prepare parameters with correct parameter names as per documentation
+    const params = {
+      component: 'user.link',
+      sharedkey: sharedKey,
+      ztime: Date.now(), // Convert to seconds
+      mail: user.email,
+      level: 'MANAGE',
+      firstname: user.name, // Changed from firstName to firstname
+      lastname: user.lastName || '', // Added lastname as it's recommended
+      addresscountry: user?.country || '', // Changed from addressCountry to addresscountry
+      locale: 'en', // Added required locale
+      sendNotifications: '1' // Added default notifications setting
+    };
+
+    // Remove undefined or empty values
+    Object.keys(params).forEach(key => {
+      if (!params[key]) {
+        delete params[key];
+      }
+    });
+
+    // Create string to sign (parameters in alphabetical order)
+    const stringToSign = Object.keys(params)
+      .sort()
+      .map(key => `${key}=${params[key]}`)
+      .join('&');
+
+    console.log('String to sign:', stringToSign);
+
+    // Generate signature using HMAC-SHA1
+    const signature = crypto
+      .createHmac('sha1', privateKey)
+      .update(stringToSign)
+      .digest('hex');
+
+    console.log('Generated signature:', signature);
+
+    // Create final URL with encoded parameters
+    const encodedParams = Object.entries(params)
+      .map(([key, value]) => `${key}=${encodeURIComponent(value)}`)
+      .join('&');
+
+    const finalUrl = `${apiUrl}?${encodedParams}&signature=${signature}`;
+
+    console.log('Final URL:', finalUrl);
+
+    // Make the API request
+    const response = await axios.get(finalUrl);
+    console.log("response",response)
+    // Parse XML response
+    const parser = new xml2js.Parser();
+    const result = await parser.parseStringPromise(response.data);
+
+    if (result.error) {
+      throw new Error(result.error.errorId[0]);
+    }
+
+    // Extract user data from response
+    
+
+    console.log('User linked successfully:', result);
+
+    return {
+      success: true,
+      result,
+      message: 'User linked successfully'
+    };
+
+  } catch (error) {
+    console.error('Error linking user:', error);
+    
+    if (error.response) {
+      console.error('API Error Response:', error.response.data);
+      throw new Error(error.response.data);
+    }
+    
+    throw error;
+  }
+};
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// -----------------------------------here start main content with AuthKey----------------------------------------------
 exports.AuthoRized = async (audio, filename) => {
   if (!filename) {
     return { error: "Filename is required." };
@@ -494,7 +614,7 @@ exports.workRegister = async (
     uploadticket: uploadTicket,
     userauthor: 1,
     worktype: "Music",
-
+    final: 1,
     ztime: Date.now(),
   };
 
@@ -936,4 +1056,62 @@ exports.getStamp = async () => {
     };
   }
 };
+
+
+exports.DownloadCertificate = async (workcode) => {
+  const authkey = process.env.AUTH_KEY;
+  const privateKey = process.env.PRIVATE_AUTH_KEY;
+  const apiUrl = "http://arena.safecreative.org/v2/";
+
+  // Create params object with required parameters
+  const params = {
+    authkey,
+    component: "work.registration-certificate",
+    code: workcode,
+    ztime: Date.now(),
+  };
+
+  // Sort parameters alphabetically and create parameter string
+  const sortedParams = Object.keys(params)
+    .sort()
+    .map((key) => {
+      return `${key}=${params[key]}`;
+    })
+    .join("&");
+
+  // Generate signature using SHA-1
+  const signature = crypto
+    .createHash("sha1")
+    .update(`${privateKey}&${sortedParams}`)
+    .digest("hex");
+
+  // Create URL-encoded parameter string
+  const encodedParams = Object.keys(params)
+    .sort()
+    .map((key) => {
+      const value = encodeURIComponent(params[key]);
+      return `${key}=${value}`;
+    })
+    .join("&");
+
+  // Construct the final URL
+  const requestUrl = `${apiUrl}?${encodedParams}&signature=${signature}`;
+
+  try {
+    const response = await axios.get(requestUrl);
+
+    // Parse XML response
+    const parser = new xml2js.Parser();
+    const result = await parser.parseStringPromise(response.data);
+    
+
+    // The result will contain the download URL and mimetype
+    const downloadLink = result?.downloadinfo.url[0] || null;
+    return downloadLink;
+  } catch (error) {
+    return "";
+    
+  }
+};
+
 
