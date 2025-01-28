@@ -53,14 +53,17 @@ router.get("/safecreative/callback", async (req, res) => {
           "webhook routeee   downloadCertificate",
           downloadCertificate
         );
-        if (checkCertificate) {
-          const beat = await Beat.findOne({ registerCode: code });
-          if (beat) {
-            beat.registrationStatus = "REGISTERED";
-            beat.certificateUrl = downloadCertificate;
-            await beat.save();
-          }
+        if (downloadCertificate) {
+          setTimeout(async () => {
+            const beat = await Beat.findOne({ registerCode: code });
+            if (beat) {
+              beat.registrationStatus = "REGISTERED";
+              beat.certificateUrl = downloadCertificate;
+              await beat.save();
+            }
+          }, 20000); // 20 seconds in milliseconds
         }
+        
         // Get download URL
 
         // You can now use this URL to download the certificate
